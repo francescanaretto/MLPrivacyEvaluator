@@ -97,7 +97,7 @@ class MiaPrivacyAttack(PrivacyAttack):
         y = attack_dataset['target_label']
         attack_dataset.columns = attack_dataset.columns.astype(str)
         attack_dataset, _= undersampler.fit_resample(attack_dataset, y)
-        attack_dataset.to_csv('./data/attack_dataset.csv') # DO WE SAVE THE ATTACK DATASET?
+        attack_dataset.to_csv('./data/attack_dataset.csv', index=False) # DO WE SAVE THE ATTACK DATASET?
         return attack_dataset
 
     def _get_attack_model(self):
