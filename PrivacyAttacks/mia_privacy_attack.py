@@ -137,10 +137,9 @@ class MiaPrivacyAttack(PrivacyAttack):
         class_labels = self.bb.predict(X)
         proba = pd.DataFrame(self.bb.predict_proba(X))
         class_labels = np.argmax(self.bb.predict_proba(X), axis=1)
-
+        print(proba)
         predictions = []
-        for idx, row in proba.iterrows():
-            pred = self.attack_models[class_labels[idx]].predict(np.array(row).reshape(1, -1))
+        for idx, row in enumerate(proba.values):
+            pred = self.attack_models[class_labels[idx]].predict(row.reshape(1, -1))
             predictions.extend(pred)
-
         return np.array(predictions)

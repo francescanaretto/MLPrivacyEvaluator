@@ -10,7 +10,7 @@ from PrivacyAttacks.mia_privacy_attack import MiaPrivacyAttack
 
 ds_name = 'adult'
 
-for n in range(1, 5):
+for n in range(2,3):
 
     target = SklearnBlackBox(f'./models/rf_{ds_name}.sav')
     attack = MiaPrivacyAttack(target, n_shadow_models=n)
