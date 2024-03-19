@@ -20,6 +20,45 @@ class MiaPrivacyAttack(PrivacyAttack):
         self.shadow_model_type = shadow_model_type
         self.attack_model_type = attack_model_type
 
+    def fit(self, shadow_dataset: pd.DataFrame, attack_model_path: str = './attack_models'):
+        attack_dataset = self._get_attack_dataset(shadow_dataset)
+        # Obtain list of all class labels
+        classes = list(attack_dataset['class_label'].unique())
+        self.attack_models = [None] * len(classes)
+        # Train one model for each class
+        for c in classes:
+            print(F'******   CLASS {c}   ******')
+            tr = attack_dataset[attack_dataset['class_label']==c] # Select only records of that class
+            tr.pop('class_label') # Drop class attribute
+            tr_l = tr.pop('target_label') # Use IN/OUT as labels
+
+            attack_model = self._get_attack_model()
+
+            train_set, test_set, train_label, test_label = train_test_split(tr, tr_l, stratify=tr_l, test_size=0.2)
+            attack_model.fit(train_set.values, train_label)
+            with open(f'{attack_model_path}/attack_model_{self.attack_model_type}_class_{c}_train_performance.txt', 'w', encoding='utf-8') as report:
+                report.write(classification_report(train_label, attack_model.predict(train_set), digits=3))
+            with open(f'{attack_model_path}/attack_model_{self.attack_model_type}_class_{c}_test_performance.txt', 'w', encoding='utf-8') as report:
+                report.write(classification_report(test_label, attack_model.predict(test_set), digits=3))
+
+            with open(f'{attack_model_path}/attack_model_{self.attack_model_type}_class_{c}.sav', 'wb') as filename:
+                pickle.dump(attack_model, filename)
+
+            self.attack_models[c] = attack_model
+        return self.attack_models
+
+
+    def predict(self, X: pd.DataFrame):
+        class_labels = self.bb.predict(X)
+        proba = pd.DataFrame(self.bb.predict_proba(X))
+        class_labels = np.argmax(self.bb.predict_proba(X), axis=1)
+        predictions = []
+        for idx, row in enumerate(proba.values):
+            pred = self.attack_models[class_labels[idx]].predict(row.reshape(1, -1))
+            predictions.extend(pred)
+        return np.array(predictions)
+
+
     def _get_shadow_model(self):
         if self.shadow_model_type == 'rf':
             shadow_model = ShadowRandomForest()
@@ -104,42 +143,3 @@ class MiaPrivacyAttack(PrivacyAttack):
         if self.attack_model_type == 'rf':
             model =  AttackRandomForest()
         return model
-
-    def fit(self, shadow_dataset: pd.DataFrame, attack_model_path: str = './attack_models' ):
-        attack_dataset = self._get_attack_dataset(shadow_dataset)
-        # Obtain list of all class labels
-        classes = list(attack_dataset['class_label'].unique())
-        self.attack_models = [None] * len(classes)
-        # Train one model for each class
-        for c in classes:
-            print(F'******   CLASS {c}   ******')
-            tr = attack_dataset[attack_dataset['class_label']==c] # Select only records of that class
-            tr.pop('class_label') # Drop class attribute
-            tr_l = tr.pop('target_label') # Use IN/OUT as labels
-
-            attack_model = self._get_attack_model()
-
-            train_set, test_set, train_label, test_label = train_test_split(tr, tr_l, stratify=tr_l, test_size=0.2)
-            attack_model.fit(train_set.values, train_label)
-            with open(f'{attack_model_path}/attack_model_{self.attack_model_type}_class_{c}_train_performance.txt', 'w', encoding='utf-8') as report:
-                report.write(classification_report(train_label, attack_model.predict(train_set), digits=3))
-            with open(f'{attack_model_path}/attack_model_{self.attack_model_type}_class_{c}_test_performance.txt', 'w', encoding='utf-8') as report:
-                report.write(classification_report(test_label, attack_model.predict(test_set), digits=3))
-
-            with open(f'{attack_model_path}/attack_model_{self.attack_model_type}_class_{c}.sav', 'wb') as filename:
-                pickle.dump(attack_model, filename)
-
-            self.attack_models[c] = attack_model
-        return self.attack_models
-
-
-    def predict(self, X: pd.DataFrame):
-        class_labels = self.bb.predict(X)
-        proba = pd.DataFrame(self.bb.predict_proba(X))
-        class_labels = np.argmax(self.bb.predict_proba(X), axis=1)
-        print(proba)
-        predictions = []
-        for idx, row in enumerate(proba.values):
-            pred = self.attack_models[class_labels[idx]].predict(row.reshape(1, -1))
-            predictions.extend(pred)
-        return np.array(predictions)

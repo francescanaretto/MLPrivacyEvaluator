@@ -5,6 +5,7 @@ from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
 from PrivacyAttacks.privacy_attack import PrivacyAttack
 from ShadowModels.random_forest_shadow_model import ShadowRandomForest
+from AttackModels.threshold_attack_model import AttackThresholdModel
 
 
 class AloaPrivacyAttack(PrivacyAttack):
@@ -13,30 +14,19 @@ class AloaPrivacyAttack(PrivacyAttack):
         self.n_shadow_models = n_shadow_models
         self.shadow_model_type = shadow_model_type
 
-    def _get_binary_continuous_features(self, X: pd.DataFrame):
-        """
-        Returns the indexes of columns containing only binary features and only continuous features.
-        """
-        binary_indices = []
-        continuous_indices = []
-        for i, column in enumerate(X):
-            unique_values = set(X[column].unique())
-            if unique_values == set([0, 1]):
-                binary_indices.append(i)
-            else:
-                continuous_indices.append(i)
-        return binary_indices, continuous_indices
-    
-    def _continuous_noise(self):
+
+    def fit(self, shadow_dataset: pd.DataFrame, attack_model_path: str = './attack_models'):
+        attack_dataset = self._get_attack_dataset(shadow_dataset)
         pass
 
-    def _binary_flip(self):
-        pass
+    def predict(self, X: pd.DataFrame):
+        class_labels = self.bb.predict(X)
+        # for record in x, perturb x
+        # Get score
+        # Use threshold model
 
-    def _get_shadow_model(self):
-        if self.shadow_model_type == 'rf':
-            shadow_model = ShadowRandomForest()
-        return shadow_model
+
+
 
     def _get_attack_dataset(self, shadow_dataset: pd.DataFrame):
         attack_dataset = []
@@ -108,8 +98,27 @@ class AloaPrivacyAttack(PrivacyAttack):
         attack_dataset.to_csv('./data/attack_dataset_aloa.csv', index=False) # DO WE SAVE THE ATTACK DATASET?
         return attack_dataset
 
-    def fit(self, shadow_dataset: pd.DataFrame):
+    def _get_binary_continuous_features(self, X: pd.DataFrame):
+        """
+        Returns the indexes of columns containing only binary features and only continuous features.
+        """
+        binary_indices = []
+        continuous_indices = []
+        for i, column in enumerate(X):
+            unique_values = set(X[column].unique())
+            if unique_values == set([0, 1]):
+                binary_indices.append(i)
+            else:
+                continuous_indices.append(i)
+        return binary_indices, continuous_indices
+    
+    def _continuous_noise(self):
         pass
 
-    def predict(self):
+    def _binary_flip(self):
         pass
+
+    def _get_shadow_model(self):
+        if self.shadow_model_type == 'rf':
+            shadow_model = ShadowRandomForest()
+        return shadow_model
