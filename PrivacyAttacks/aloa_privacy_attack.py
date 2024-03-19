@@ -1,16 +1,30 @@
 
+import pandas as pd
 from PrivacyAttacks.privacy_attack import *
 
 
 class AloaPrivacyAttack(PrivacyAttack):
-    def __init__(self, black_box, attack_dataset_kind='stat', attack_dataset):
+    def __init__(self, black_box, shadow_model_type = 'rf'):
         super.__init__(black_box)
-        self.attack_dataset = attack_dataset #noise, stat, random
-        #qui controllo se stringa devo creare il dataset, se è dato lo uso e basta
-        #stat, data
-        self.train_set_attack = ...
+        self.shadow_model_type = shadow_model_type
 
 
-    #impletare i due metodi astratti
-    def train(self.train_set_attack):
+    def _get_binary_features(self, X: pd.DataFrame):
+        indices = []
+        for i, column in enumerate(X):
+            unique_values = set(X[column].unique())
+            if unique_values == set([0, 1]):
+                indices.append(i)
+        return indices
+    
+    def _continuous_noise(self):
+        pass
+
+    def _binary_flip(self):
+        pass
+
+    def fit(self, shadow_dataset: pd.DataFrame):
+        pass
+
+    def predict(self):
         pass

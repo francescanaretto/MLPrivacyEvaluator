@@ -7,6 +7,7 @@ import numpy as np
 import pickle
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
+import sys
 
 DS_NAME = 'adult'
 MODEL_TYPE = 'rf'
