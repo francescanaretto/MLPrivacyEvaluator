@@ -1,6 +1,7 @@
 
 import pandas as pd
-from PrivacyAttacks.privacy_attack import *
+from PrivacyAttacks.privacy_attack import PrivacyAttack
+from ShadowModels.random_forest_shadow_model import ShadowRandomForest
 
 
 class AloaPrivacyAttack(PrivacyAttack):
@@ -22,6 +23,11 @@ class AloaPrivacyAttack(PrivacyAttack):
 
     def _binary_flip(self):
         pass
+
+    def _get_shadow_model(self):
+        if self.shadow_model_type == 'rf':
+            shadow_model = ShadowRandomForest()
+        return shadow_model
 
     def fit(self, shadow_dataset: pd.DataFrame):
         pass
