@@ -6,8 +6,8 @@ from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
 from PrivacyAttacks.privacy_attack import PrivacyAttack
-from ShadowModels.random_forest_shadow_model import ShadowRandomForest
-from AttackModels.threshold_attack_model import AttackThresholdModel
+from ShadowModels import ShadowRandomForest
+from AttackModels import AttackThresholdModel
 
 
 class AloaPrivacyAttack(PrivacyAttack):

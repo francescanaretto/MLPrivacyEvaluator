@@ -10,8 +10,8 @@ from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
 from PrivacyAttacks.privacy_attack import PrivacyAttack
 from MLWrapper.bbox import AbstractBBox
-from ShadowModels.random_forest_shadow_model import ShadowRandomForest
-from AttackModels.random_forest_attack_model import AttackRandomForest
+from ShadowModels import ShadowRandomForest
+from AttackModels import AttackRandomForest
 
 class MiaPrivacyAttack(PrivacyAttack):
     def __init__(self, black_box: AbstractBBox, n_shadow_models=3, shadow_model_type='rf', attack_model_type='rf'):

@@ -16,3 +16,18 @@ class MLPrivacyEvaluator():
         self.test_set_bb = test_set
         self.test_labels_bb = test_labels
         self.privacy_attacks = privacy_attacks
+
+
+"""
+Input
+- modello
+- attacco
+- metriche desiderate? (default classification report, salvato nella cartella di prima)
+- dataset su cui valutare (labelling lo facciamo interno)
+
+Valutazione sia su dato sintentico che reale
+Default: tutte le metriche, versione semplice (classification report)
+
+
+Testare su MIA, ALOA
+"""
