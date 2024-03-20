@@ -47,7 +47,6 @@ class MiaPrivacyAttack(PrivacyAttack):
             self.attack_models[c] = attack_model
         return self.attack_models
 
-
     def predict(self, X: pd.DataFrame):
         class_labels = self.bb.predict(X)
         proba = pd.DataFrame(self.bb.predict_proba(X))
@@ -58,12 +57,10 @@ class MiaPrivacyAttack(PrivacyAttack):
             predictions.extend(pred)
         return np.array(predictions)
 
-
     def _get_shadow_model(self):
         if self.shadow_model_type == 'rf':
             shadow_model = ShadowRandomForest()
         return shadow_model
-
 
     def _get_attack_dataset(self, shadow_dataset: pd.DataFrame):
         attack_dataset = []

@@ -1,5 +1,7 @@
 
 import pandas as pd
+import numpy as np
+from tqdm import tqdm
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
@@ -13,26 +15,32 @@ class AloaPrivacyAttack(PrivacyAttack):
         super().__init__(black_box)
         self.n_shadow_models = n_shadow_models
         self.shadow_model_type = shadow_model_type
+        self.attack_model = None
 
-
-    def fit(self, shadow_dataset: pd.DataFrame, attack_model_path: str = './attack_models'):
+    def fit(self, shadow_dataset: pd.DataFrame, n_noise_samples=100, attack_model_path: str = './attack_models'):
         attack_dataset = self._get_attack_dataset(shadow_dataset)
-        pass
+        class_labels = attack_dataset.pop('class_label')
+        target_labels = attack_dataset.pop('target_label')
+        scores = self._get_robustness_score(attack_dataset.copy(), class_labels,  n_noise_samples)
+        # Convert IN/OUT to 1/0 for training the threshold model
+        target_labels = np.array(list(map(lambda score:0 if score == "OUT" else 1, target_labels)))
+        th_model = AttackThresholdModel()
+        th_model.fit(scores, target_labels)
+        self.attack_model = th_model
+        return th_model.threshold
 
-    def predict(self, X: pd.DataFrame):
+    def predict(self, X: pd.DataFrame, n_noise_samples=100):
         class_labels = self.bb.predict(X)
-        # for record in x, perturb x
-        # Get score
-        # Use threshold model
-
-
-
+        scores = self._get_robustness_score(X.copy(), class_labels,  n_noise_samples)
+        predictions = self.attack_model.predict(scores)
+        predictions = np.array(list(map(lambda score:"IN" if score == 1 else "OUT", predictions)))
+        return predictions
 
     def _get_attack_dataset(self, shadow_dataset: pd.DataFrame):
         attack_dataset = []
         # We audit the black box for the predictions on the shadow set
         labels_shadow = self.bb.predict(shadow_dataset)
-        
+
                 # Train the shadow models
         if self.n_shadow_models >= 2:
             folds = StratifiedKFold(n_splits=self.n_shadow_models)
@@ -66,7 +74,7 @@ class AloaPrivacyAttack(PrivacyAttack):
                 attack_dataset.append(df_final)
         else:
             tr, ts, tr_l, ts_l = train_test_split(shadow_dataset, labels_shadow, stratify=labels_shadow, test_size=0.2)
-            
+
             # Create and train the shadow model
             shadow_model = self._get_shadow_model()
             shadow_model.fit(tr, tr_l)
@@ -98,25 +106,38 @@ class AloaPrivacyAttack(PrivacyAttack):
         attack_dataset.to_csv('./data/attack_dataset_aloa.csv', index=False) # DO WE SAVE THE ATTACK DATASET?
         return attack_dataset
 
-    def _get_binary_continuous_features(self, X: pd.DataFrame):
-        """
-        Returns the indexes of columns containing only binary features and only continuous features.
-        """
-        binary_indices = []
-        continuous_indices = []
-        for i, column in enumerate(X):
-            unique_values = set(X[column].unique())
-            if unique_values == set([0, 1]):
-                binary_indices.append(i)
+    def _get_robustness_score(self, dataset, class_labels, n_noise_samples):
+        percentage_deviation = (0.1, 0.50)
+        scores = []
+        index = 0
+        for row in tqdm(dataset.values):
+            variations = []
+            y_true = class_labels[index]
+            y_predicted = self.bb.predict(np.array([row]))
+            if y_true == y_predicted:
+                perturbed_row = row.copy()
+                variations = self._noise_neighborhood(perturbed_row, n_noise_samples, percentage_deviation)
+                output = self.bb.predict(variations)
+                score = np.mean(np.array(list(map(lambda x: 1 if x == y_true else 0, output))))
+                scores.append(score)
             else:
-                continuous_indices.append(i)
-        return binary_indices, continuous_indices
-    
-    def _continuous_noise(self):
-        pass
+                scores.append(0)
+            index += 1
+        return scores
 
-    def _binary_flip(self):
-        pass
+    def _noise_neighborhood(self, row, n_noise_samples, percentage_deviation):
+        pmin = percentage_deviation[0]
+        pmax = percentage_deviation[1]
+        # Create a matrix by duplicating vect N times
+        vect_matrix = np.tile(row, (n_noise_samples, 1))
+
+        # Create a matrix of percentage perturbations to be applied to vect_matrix
+        sampl = np.random.uniform(low=pmin, high=pmax, size=(n_noise_samples, len(row)))
+        # Vector for adding or subtracking a value
+        sum_sub = np.random.choice([-1, 1], size=(n_noise_samples, len(row)))
+        # Here we apply the perturbation perturb
+        vect_matrix = vect_matrix + (vect_matrix * (sum_sub * sampl))
+        return vect_matrix
 
     def _get_shadow_model(self):
         if self.shadow_model_type == 'rf':
