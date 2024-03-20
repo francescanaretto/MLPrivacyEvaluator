@@ -27,7 +27,6 @@ class MiaPrivacyAttack(PrivacyAttack):
         self.attack_models = [None] * len(classes)
         # Train one model for each class
         for c in classes:
-            print(F'******   CLASS {c}   ******')
             tr = attack_dataset[attack_dataset['class_label']==c] # Select only records of that class
             tr.pop('class_label') # Drop class attribute
             tr_l = tr.pop('target_label') # Use IN/OUT as labels
