@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.metrics import precision_score, classification_report
-from AttackModels.threshold_attack_model import AttackThresholdModel
+from AttackModels import AttackThresholdModel
 
 data = pd.read_csv('./data/attack_dataset.csv', skipinitialspace=True)
 
@@ -11,7 +11,7 @@ train_label = pd.DataFrame(data['class_label']).to_numpy().ravel()
 
 
 model = AttackThresholdModel()
-model.fit(train_set, train_label, thresholds=np.linspace(0,1,100), score_type='va')
+model.fit(train_set, train_label, thresholds=np.linspace(0,1,100), score_type='accuracy')
 
 pred = model.predict(train_set)
 

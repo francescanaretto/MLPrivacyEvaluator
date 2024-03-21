@@ -2,9 +2,9 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from AttackModels.attack_model import AttackModel
+from ._shadow_model import ShadowModel
 
-class AttackRandomForest(AttackModel):
+class ShadowRandomForest(ShadowModel):
     def __init__(self):
         self.model = RandomForestClassifier(n_estimators=100)
 
@@ -16,3 +16,6 @@ class AttackRandomForest(AttackModel):
 
     def predict_proba(self, X: pd.DataFrame):
         return self.model.predict_proba(X)
+
+    def test(self):
+        pass
