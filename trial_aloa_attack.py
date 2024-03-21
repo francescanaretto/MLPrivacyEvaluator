@@ -2,13 +2,15 @@
 File to test the ALOA attack.
 """
 
+import sys
+import warnings
 import pandas as pd
 import numpy as np
-import sys
+
 from sklearn.metrics import classification_report
 from MLWrapper.wrappers import SklearnBlackBox
 from PrivacyAttacks import AloaPrivacyAttack
-import warnings
+
 warnings.simplefilter("ignore", UserWarning)
 
 ds_name = 'gaussian'
@@ -16,13 +18,14 @@ ds_name = 'gaussian'
 n = 1
 
 target = SklearnBlackBox(f'./models/rf_{ds_name}.sav')
-attack = AloaPrivacyAttack(target, n_shadow_models=n) # Passa nome per la cartella (dentro cartella shadow + attack)
+attack = AloaPrivacyAttack(target, n_shadow_models=n)
+# Passa nome per la cartella (dentro cartella shadow + attack)
 
-train_data = pd.read_csv(f'./data/{ds_name}/{ds_name}_original_train_set.csv', skipinitialspace = True)[:3000]
-train_label = pd.read_csv(f'./data/{ds_name}/{ds_name}_original_train_label.csv', skipinitialspace = True).to_numpy().ravel()
-test_data = pd.read_csv(f'./data/{ds_name}/{ds_name}_original_test_set.csv', skipinitialspace = True)[:1000]
-test_label = pd.read_csv(f'./data/{ds_name}/{ds_name}_original_test_label.csv', skipinitialspace = True).to_numpy().ravel()
-shadow_data = pd.read_csv(f'./data/{ds_name}/{ds_name}_shadow_set.csv', skipinitialspace = True)
+train_data = pd.read_csv(f'./data/{ds_name}/{ds_name}_original_train_set.csv', skipinitialspace=True)[:3000]
+train_label = pd.read_csv(f'./data/{ds_name}/{ds_name}_original_train_label.csv', skipinitialspace=True).to_numpy().ravel()
+test_data = pd.read_csv(f'./data/{ds_name}/{ds_name}_original_test_set.csv', skipinitialspace=True)[:1000]
+test_label = pd.read_csv(f'./data/{ds_name}/{ds_name}_original_test_label.csv', skipinitialspace=True).to_numpy().ravel()
+shadow_data = pd.read_csv(f'./data/{ds_name}/{ds_name}_shadow_set.csv', skipinitialspace=True)
 
 attack.fit(shadow_data)
 
@@ -40,7 +43,7 @@ print("Threshold", attack.attack_model.threshold)
 
 """
 Da salvare tutto di default
-- shadow model + report 
+- shadow model + report
 - attack dataset
 - attack model + report
 

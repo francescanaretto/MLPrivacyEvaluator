@@ -5,10 +5,10 @@ from tqdm import tqdm
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
-from ._privacy_attack import PrivacyAttack
+
 from ShadowModels import ShadowRandomForest
 from AttackModels import AttackThresholdModel
-
+from ._privacy_attack import PrivacyAttack
 
 class AloaPrivacyAttack(PrivacyAttack):
     def __init__(self, black_box, n_shadow_models='1', shadow_model_type = 'rf'):
@@ -41,7 +41,7 @@ class AloaPrivacyAttack(PrivacyAttack):
         # We audit the black box for the predictions on the shadow set
         labels_shadow = self.bb.predict(shadow_dataset)
 
-                # Train the shadow models
+        # Train the shadow models
         if self.n_shadow_models >= 2:
             folds = StratifiedKFold(n_splits=self.n_shadow_models)
             # tr and ts are inverted when selecting the fold
@@ -94,7 +94,7 @@ class AloaPrivacyAttack(PrivacyAttack):
             #print(classification_report(ts_l, pred_ts_labels, digits=3))
 
             df_final = pd.concat([df_in, df_out])
-            attack_dataset.append(df_final)
+            attack_dataset.append(df_final)            
 
         # Merge all sets and reset the index
         attack_dataset = pd.concat(attack_dataset)
