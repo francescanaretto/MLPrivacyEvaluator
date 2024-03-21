@@ -4,7 +4,7 @@ File to test the black box wrapper.
 
 import pandas as pd
 
-from MLWrapper.wrappers import SklearnBlackBox
+from MLWrapper._wrappers import SklearnBlackBox
 
 
 DS_NAME = 'adult'

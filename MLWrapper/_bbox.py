@@ -16,5 +16,5 @@ class AbstractBBox(ABC):
         pass
 
     @abstractmethod
-    def predict_proba(self, X: pd.DataFrame):
+    def predict_proba(self, X: pd.DataFrame) -> np.array:
         pass

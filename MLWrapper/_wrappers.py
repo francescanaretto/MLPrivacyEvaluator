@@ -6,9 +6,7 @@ abstract class AbstractBbox.
 
 import pickle
 
-import pandas as pd
-
-from MLWrapper.bbox import AbstractBBox
+from MLWrapper._bbox import AbstractBBox
 
 
 class SklearnBlackBox(AbstractBBox):
@@ -23,10 +21,10 @@ class SklearnBlackBox(AbstractBBox):
     def model(self):
         return self.bbox
 
-    def predict(self, X: pd.DataFrame):
+    def predict(self, X):
         return self.bbox.predict(X)
 
-    def predict_proba(self, X: pd.DataFrame):
+    def predict_proba(self, X):
         return self.bbox.predict_proba(X)
 
 
