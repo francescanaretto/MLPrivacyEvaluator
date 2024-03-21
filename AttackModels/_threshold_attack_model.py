@@ -1,4 +1,5 @@
 
+
 import numpy as np
 from sklearn.metrics import precision_score, recall_score, accuracy_score, classification_report
 
@@ -6,6 +7,7 @@ from ._attack_model import AttackModel
 
 
 class AttackThresholdModel(AttackModel):
+
     def __init__(self):
         self.threshold = None
 

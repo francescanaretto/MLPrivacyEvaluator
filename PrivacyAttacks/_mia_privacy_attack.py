@@ -3,17 +3,21 @@ Implementation of the original MIA attack.
 """
 
 import pickle
+
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
-from PrivacyAttacks._privacy_attack import PrivacyAttack
+
 from MLWrapper.bbox import AbstractBBox
 from ShadowModels import ShadowRandomForest
 from AttackModels import AttackRandomForest
+from ._privacy_attack import PrivacyAttack
+
 
 class MiaPrivacyAttack(PrivacyAttack):
+
     def __init__(self, black_box: AbstractBBox, n_shadow_models=3, shadow_model_type='rf', attack_model_type='rf'):
         super().__init__(black_box)
         self.n_shadow_models = n_shadow_models
@@ -27,9 +31,9 @@ class MiaPrivacyAttack(PrivacyAttack):
         self.attack_models = [None] * len(classes)
         # Train one model for each class
         for c in classes:
-            tr = attack_dataset[attack_dataset['class_label']==c] # Select only records of that class
-            tr.pop('class_label') # Drop class attribute
-            tr_l = tr.pop('target_label') # Use IN/OUT as labels
+            tr = attack_dataset[attack_dataset['class_label'] == c]  # Select only records of that class
+            tr.pop('class_label')  # Drop class attribute
+            tr_l = tr.pop('target_label')  # Use IN/OUT as labels
 
             attack_model = self._get_attack_model()
 
@@ -88,7 +92,7 @@ class MiaPrivacyAttack(PrivacyAttack):
                 df_in = pd.DataFrame(pred_tr_proba)
                 df_in['class_label'] = pred_tr_labels
                 df_in['target_label'] = 'IN'
-                #print(classification_report(tr_l, pred_tr_labels, digits=3))
+                # print(classification_report(tr_l, pred_tr_labels, digits=3))
 
                 # Get the "OUT" set
                 pred_ts_labels = shadow_model.predict(ts)
@@ -96,7 +100,7 @@ class MiaPrivacyAttack(PrivacyAttack):
                 df_out = pd.DataFrame(pred_ts_proba)
                 df_out['class_label'] = pred_ts_labels
                 df_out['target_label'] = 'OUT'
-                #print(classification_report(ts_l, pred_ts_labels, digits=3))
+                # print(classification_report(ts_l, pred_ts_labels, digits=3))
 
                 df_final = pd.concat([df_in, df_out])
                 attack_dataset.append(df_final)
@@ -112,7 +116,7 @@ class MiaPrivacyAttack(PrivacyAttack):
             df_in = pd.DataFrame(pred_tr_proba)
             df_in['class_label'] = pred_tr_labels
             df_in['target_label'] = 'IN'
-            #print(classification_report(tr_l, pred_tr_labels, digits=3))
+            # print(classification_report(tr_l, pred_tr_labels, digits=3))
 
             # Get the "OUT" set
             pred_ts_labels = shadow_model.predict(ts)
@@ -120,7 +124,7 @@ class MiaPrivacyAttack(PrivacyAttack):
             df_out = pd.DataFrame(pred_ts_proba)
             df_out['class_label'] = pred_ts_labels
             df_out['target_label'] = 'OUT'
-            #print(classification_report(ts_l, pred_ts_labels, digits=3))
+            # print(classification_report(ts_l, pred_ts_labels, digits=3))
 
             df_final = pd.concat([df_in, df_out])
             attack_dataset.append(df_final)
@@ -131,11 +135,11 @@ class MiaPrivacyAttack(PrivacyAttack):
         undersampler = RandomUnderSampler(sampling_strategy='majority')
         y = attack_dataset['target_label']
         attack_dataset.columns = attack_dataset.columns.astype(str)
-        attack_dataset, _= undersampler.fit_resample(attack_dataset, y)
-        attack_dataset.to_csv('./data/attack_dataset.csv', index=False) # DO WE SAVE THE ATTACK DATASET?
+        attack_dataset, _ = undersampler.fit_resample(attack_dataset, y)
+        attack_dataset.to_csv('./data/attack_dataset.csv', index=False)  # DO WE SAVE THE ATTACK DATASET?
         return attack_dataset
 
     def _get_attack_model(self):
         if self.attack_model_type == 'rf':
-            model =  AttackRandomForest()
+            model = AttackRandomForest()
         return model

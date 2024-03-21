@@ -2,25 +2,24 @@
 File to create a black box model.
 """
 
-import pandas as pd
-import numpy as np
 import pickle
+
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
-import sys
+
 
 DS_NAME = 'adult'
+DATA_FOLDER = f'./data/{DS_NAME}'
 MODEL_TYPE = 'rf'
 
-train_set = pd.read_csv(f'./data/{DS_NAME}/{DS_NAME}_original_train_set.csv', skipinitialspace = True)
-train_label = pd.read_csv(f'./data/{DS_NAME}/{DS_NAME}_original_train_label.csv', skipinitialspace = True).to_numpy().ravel()
-test_set = pd.read_csv(f'./data/{DS_NAME}/{DS_NAME}_original_test_set.csv', skipinitialspace = True)
-test_label = pd.read_csv(f'./data/{DS_NAME}/{DS_NAME}_original_test_label.csv', skipinitialspace = True).to_numpy().ravel()
-
+train_set = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_train_set.csv', skipinitialspace=True)
+train_label = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_train_label.csv', skipinitialspace=True).to_numpy().ravel()
+test_set = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_test_set.csv', skipinitialspace=True)
+test_label = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_test_label.csv', skipinitialspace=True).to_numpy().ravel()
 
 print(train_set.shape)
 print(train_label.shape)
-
 
 model = RandomForestClassifier(n_estimators=100)
 model.fit(train_set.values, train_label)

@@ -1,10 +1,14 @@
 
+
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+
 from ._shadow_model import ShadowModel
 
+
 class ShadowRandomForest(ShadowModel):
+
     def __init__(self):
         self.model = RandomForestClassifier(n_estimators=100)
 

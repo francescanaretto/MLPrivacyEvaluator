@@ -1,7 +1,8 @@
 
+
+from tqdm import tqdm
 import pandas as pd
 import numpy as np
-from tqdm import tqdm
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
@@ -10,8 +11,10 @@ from ShadowModels import ShadowRandomForest
 from AttackModels import AttackThresholdModel
 from ._privacy_attack import PrivacyAttack
 
+
 class AloaPrivacyAttack(PrivacyAttack):
-    def __init__(self, black_box, n_shadow_models='1', shadow_model_type = 'rf'):
+
+    def __init__(self, black_box, n_shadow_models='1', shadow_model_type='rf'):
         super().__init__(black_box)
         self.n_shadow_models = n_shadow_models
         self.shadow_model_type = shadow_model_type
@@ -23,7 +26,7 @@ class AloaPrivacyAttack(PrivacyAttack):
         target_labels = attack_dataset.pop('target_label')
         scores = self._get_robustness_score(attack_dataset.copy(), class_labels,  n_noise_samples)
         # Convert IN/OUT to 1/0 for training the threshold model
-        target_labels = np.array(list(map(lambda score:0 if score == "OUT" else 1, target_labels)))
+        target_labels = np.array(list(map(lambda score: 0 if score == "OUT" else 1, target_labels)))
         th_model = AttackThresholdModel()
         th_model.fit(scores, target_labels)
         self.attack_model = th_model
@@ -33,7 +36,7 @@ class AloaPrivacyAttack(PrivacyAttack):
         class_labels = self.bb.predict(X)
         scores = self._get_robustness_score(X.copy(), class_labels,  n_noise_samples)
         predictions = self.attack_model.predict(scores)
-        predictions = np.array(list(map(lambda score:"IN" if score == 1 else "OUT", predictions)))
+        predictions = np.array(list(map(lambda score: "IN" if score == 1 else "OUT", predictions)))
         return predictions
 
     def _get_attack_dataset(self, shadow_dataset: pd.DataFrame):
@@ -61,14 +64,14 @@ class AloaPrivacyAttack(PrivacyAttack):
                 df_in = pd.DataFrame(tr)
                 df_in['class_label'] = pred_tr_labels
                 df_in['target_label'] = 'IN'
-                #print(classification_report(tr_l, pred_tr_labels, digits=3))
+                # print(classification_report(tr_l, pred_tr_labels, digits=3))
 
                 # Get the "OUT" set
                 pred_ts_labels = shadow_model.predict(ts)
                 df_out = pd.DataFrame(ts)
                 df_out['class_label'] = pred_ts_labels
                 df_out['target_label'] = 'OUT'
-                #print(classification_report(ts_l, pred_ts_labels, digits=3))
+                # print(classification_report(ts_l, pred_ts_labels, digits=3))
 
                 df_final = pd.concat([df_in, df_out])
                 attack_dataset.append(df_final)
@@ -84,17 +87,17 @@ class AloaPrivacyAttack(PrivacyAttack):
             df_in = pd.DataFrame(tr)
             df_in['class_label'] = pred_tr_labels
             df_in['target_label'] = 'IN'
-            #print(classification_report(tr_l, pred_tr_labels, digits=3))
+            # print(classification_report(tr_l, pred_tr_labels, digits=3))
 
             # Get the "OUT" set
             pred_ts_labels = shadow_model.predict(ts)
             df_out = pd.DataFrame(ts)
             df_out['class_label'] = pred_ts_labels
             df_out['target_label'] = 'OUT'
-            #print(classification_report(ts_l, pred_ts_labels, digits=3))
+            # print(classification_report(ts_l, pred_ts_labels, digits=3))
 
             df_final = pd.concat([df_in, df_out])
-            attack_dataset.append(df_final)            
+            attack_dataset.append(df_final)
 
         # Merge all sets and reset the index
         attack_dataset = pd.concat(attack_dataset)
@@ -102,8 +105,8 @@ class AloaPrivacyAttack(PrivacyAttack):
         undersampler = RandomUnderSampler(sampling_strategy='majority')
         y = attack_dataset['target_label']
         attack_dataset.columns = attack_dataset.columns.astype(str)
-        attack_dataset, _= undersampler.fit_resample(attack_dataset, y)
-        attack_dataset.to_csv('./data/attack_dataset_aloa.csv', index=False) # DO WE SAVE THE ATTACK DATASET?
+        attack_dataset, _ = undersampler.fit_resample(attack_dataset, y)
+        attack_dataset.to_csv('./data/attack_dataset_aloa.csv', index=False)  # DO WE SAVE THE ATTACK DATASET?
         return attack_dataset
 
     def _get_robustness_score(self, dataset, class_labels, n_noise_samples):

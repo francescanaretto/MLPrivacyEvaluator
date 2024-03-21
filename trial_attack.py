@@ -2,34 +2,37 @@
 File to test the MIA attack.
 """
 
+import warnings
+
 import pandas as pd
 import numpy as np
 from sklearn.metrics import classification_report
+
 from MLWrapper.wrappers import SklearnBlackBox
 from PrivacyAttacks import MiaPrivacyAttack
 
-import warnings
+
 warnings.simplefilter("ignore", UserWarning)
 
-ds_name = 'adult'
+DS_NAME = 'adult'
+DATA_FOLDER = f'./data/{DS_NAME}'
 
-for n in range(2,3):
-
-    target = SklearnBlackBox(f'./models/rf_{ds_name}.sav')
+for n in range(2, 3):
+    target = SklearnBlackBox(f'./models/rf_{DS_NAME}.sav')
     attack = MiaPrivacyAttack(target, n_shadow_models=n)
 
-    train_data = pd.read_csv(f'./data/{ds_name}/{ds_name}_original_train_set.csv', skipinitialspace = True)[:1000]
-    train_label = pd.read_csv(f'./data/{ds_name}/{ds_name}_original_train_label.csv', skipinitialspace = True).to_numpy().ravel()
-    test_data = pd.read_csv(f'./data/{ds_name}/{ds_name}_original_test_set.csv', skipinitialspace = True)[:1000]
-    test_label = pd.read_csv(f'./data/{ds_name}/{ds_name}_original_test_label.csv', skipinitialspace = True).to_numpy().ravel()
-    shadow_data = pd.read_csv(f'./data/{ds_name}/{ds_name}_shadow_set.csv', skipinitialspace = True)
+    train_set = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_train_set.csv', skipinitialspace=True)
+    train_label = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_train_label.csv', skipinitialspace=True).to_numpy().ravel()
+    test_set = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_test_set.csv', skipinitialspace=True)
+    test_label = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_test_label.csv', skipinitialspace=True).to_numpy().ravel()
+    shadow_data = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_shadow_set.csv', skipinitialspace=True)
 
     attack.fit(shadow_data)
 
-    in_set = np.full(train_data.shape[0], 'IN')
-    out_set = np.full(test_data.shape[0], 'OUT')
+    in_set = np.full(train_set.shape[0], 'IN')
+    out_set = np.full(test_set.shape[0], 'OUT')
 
-    data = pd.concat([train_data, test_data])
+    data = pd.concat([train_set, test_set])
     membership = np.concatenate((in_set, out_set))
 
     pred = attack.predict(data)
