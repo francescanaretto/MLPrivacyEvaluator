@@ -6,7 +6,7 @@ abstract class AbstractBbox.
 
 import pickle
 
-from MLWrappers._bbox import AbstractBBox
+from ._bbox import AbstractBBox
 
 
 class SklearnBlackBox(AbstractBBox):

@@ -72,40 +72,11 @@ class MiaPrivacyAttack(PrivacyAttack):
         labels_shadow = self.bb.predict(shadow_dataset)
 
         # Train the shadow models
-        if self.n_shadow_models >= 2:
-            folds = StratifiedKFold(n_splits=self.n_shadow_models)
-            # tr and ts are inverted when selecting the fold
-            for _, (ts_index, tr_index) in enumerate(folds.split(shadow_dataset, labels_shadow)):
-                # Get train and test data for each shadow model
-                tr = shadow_dataset.iloc[tr_index]
-                tr_l = labels_shadow[tr_index]
-                ts = shadow_dataset.iloc[ts_index]
-                ts_l = labels_shadow[ts_index]
-
-                # Create and train the shadow model
-                shadow_model = self._get_shadow_model()
-                shadow_model.fit(tr, tr_l)
-
-                # Get the "IN" set
-                pred_tr_labels = shadow_model.predict(tr)
-                pred_tr_proba = shadow_model.predict_proba(tr)
-                df_in = pd.DataFrame(pred_tr_proba)
-                df_in['class_label'] = pred_tr_labels
-                df_in['target_label'] = 'IN'
-                # print(classification_report(tr_l, pred_tr_labels, digits=3))
-
-                # Get the "OUT" set
-                pred_ts_labels = shadow_model.predict(ts)
-                pred_ts_proba = shadow_model.predict_proba(ts)
-                df_out = pd.DataFrame(pred_ts_proba)
-                df_out['class_label'] = pred_ts_labels
-                df_out['target_label'] = 'OUT'
-                # print(classification_report(ts_l, pred_ts_labels, digits=3))
-
-                df_final = pd.concat([df_in, df_out])
-                attack_dataset.append(df_final)
-        else:
-            tr, ts, tr_l, ts_l = train_test_split(shadow_dataset, labels_shadow, stratify=labels_shadow, test_size=0.2)
+        for i in range(1, self.n_shadow_models+1):
+            data = shadow_dataset.sample(frac=max(1/self.n_shadow_models, 0.2), replace=False)
+            labels = labels_shadow[np.array(data.index)]
+            
+            tr, ts, tr_l, ts_l = train_test_split(data, labels, stratify=labels, test_size=0.5)
             # Create and train the shadow model
             shadow_model = self._get_shadow_model()
             shadow_model.fit(tr, tr_l)

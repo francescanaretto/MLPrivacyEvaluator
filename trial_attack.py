@@ -17,7 +17,7 @@ warnings.simplefilter("ignore", UserWarning)
 DS_NAME = 'adult'
 DATA_FOLDER = f'./data/{DS_NAME}'
 
-for n in range(2, 3):
+for n in range(3, 4):
     target = SklearnBlackBox(f'./models/rf_{DS_NAME}.sav')
     attack = MiaPrivacyAttack(target, n_shadow_models=n)
 
