@@ -1,5 +1,5 @@
 from MLWrapper.bbox import AbstractBBox
-from PrivacyAttacks.privacy_attack import *
+from PrivacyAttacks._privacy_attack import *
 import pandas as pd
 from typing import *
 

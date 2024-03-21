@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import classification_report
 from MLWrapper.wrappers import SklearnBlackBox
-from PrivacyAttacks.mia_privacy_attack import MiaPrivacyAttack
+from PrivacyAttacks import MiaPrivacyAttack
 
 import warnings
 warnings.simplefilter("ignore", UserWarning)

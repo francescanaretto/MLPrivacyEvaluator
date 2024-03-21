@@ -1,47 +1,73 @@
+"""
+Implementation of the original MIA attack.
+"""
 
+import pickle
 import pandas as pd
 import numpy as np
-from tqdm import tqdm
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
-from PrivacyAttacks.privacy_attack import PrivacyAttack
+from PrivacyAttacks._privacy_attack import PrivacyAttack
+from MLWrapper.bbox import AbstractBBox
 from ShadowModels import ShadowRandomForest
-from AttackModels import AttackThresholdModel
+from AttackModels import AttackRandomForest
 
-
-class AloaPrivacyAttack(PrivacyAttack):
-    def __init__(self, black_box, n_shadow_models='1', shadow_model_type = 'rf'):
+class MiaPrivacyAttack(PrivacyAttack):
+    def __init__(self, black_box: AbstractBBox, n_shadow_models=3, shadow_model_type='rf', attack_model_type='rf'):
         super().__init__(black_box)
         self.n_shadow_models = n_shadow_models
         self.shadow_model_type = shadow_model_type
-        self.attack_model = None
+        self.attack_model_type = attack_model_type
 
-    def fit(self, shadow_dataset: pd.DataFrame, n_noise_samples=100, attack_model_path: str = './attack_models'):
+    def fit(self, shadow_dataset: pd.DataFrame, attack_model_path: str = './attack_models'):
         attack_dataset = self._get_attack_dataset(shadow_dataset)
-        class_labels = attack_dataset.pop('class_label')
-        target_labels = attack_dataset.pop('target_label')
-        scores = self._get_robustness_score(attack_dataset.copy(), class_labels,  n_noise_samples)
-        # Convert IN/OUT to 1/0 for training the threshold model
-        target_labels = np.array(list(map(lambda score:0 if score == "OUT" else 1, target_labels)))
-        th_model = AttackThresholdModel()
-        th_model.fit(scores, target_labels)
-        self.attack_model = th_model
-        return th_model.threshold
+        # Obtain list of all class labels
+        classes = list(attack_dataset['class_label'].unique())
+        self.attack_models = [None] * len(classes)
+        # Train one model for each class
+        for c in classes:
+            tr = attack_dataset[attack_dataset['class_label']==c] # Select only records of that class
+            tr.pop('class_label') # Drop class attribute
+            tr_l = tr.pop('target_label') # Use IN/OUT as labels
 
-    def predict(self, X: pd.DataFrame, n_noise_samples=100):
+            attack_model = self._get_attack_model()
+
+            train_set, test_set, train_label, test_label = train_test_split(tr, tr_l, stratify=tr_l, test_size=0.2)
+            attack_model.fit(train_set.values, train_label)
+            with open(f'{attack_model_path}/attack_model_{self.attack_model_type}_class_{c}_train_performance.txt', 'w', encoding='utf-8') as report:
+                report.write(classification_report(train_label, attack_model.predict(train_set), digits=3))
+            with open(f'{attack_model_path}/attack_model_{self.attack_model_type}_class_{c}_test_performance.txt', 'w', encoding='utf-8') as report:
+                report.write(classification_report(test_label, attack_model.predict(test_set), digits=3))
+
+            with open(f'{attack_model_path}/attack_model_{self.attack_model_type}_class_{c}.sav', 'wb') as filename:
+                pickle.dump(attack_model, filename)
+
+            self.attack_models[c] = attack_model
+        return self.attack_models
+
+    def predict(self, X: pd.DataFrame):
         class_labels = self.bb.predict(X)
-        scores = self._get_robustness_score(X.copy(), class_labels,  n_noise_samples)
-        predictions = self.attack_model.predict(scores)
-        predictions = np.array(list(map(lambda score:"IN" if score == 1 else "OUT", predictions)))
-        return predictions
+        proba = pd.DataFrame(self.bb.predict_proba(X))
+        class_labels = np.argmax(self.bb.predict_proba(X), axis=1)
+        predictions = []
+        for idx, row in enumerate(proba.values):
+            pred = self.attack_models[class_labels[idx]].predict(row.reshape(1, -1))
+            predictions.extend(pred)
+        return np.array(predictions)
+
+    def _get_shadow_model(self):
+        if self.shadow_model_type == 'rf':
+            shadow_model = ShadowRandomForest()
+        return shadow_model
 
     def _get_attack_dataset(self, shadow_dataset: pd.DataFrame):
         attack_dataset = []
+
         # We audit the black box for the predictions on the shadow set
         labels_shadow = self.bb.predict(shadow_dataset)
 
-                # Train the shadow models
+        # Train the shadow models
         if self.n_shadow_models >= 2:
             folds = StratifiedKFold(n_splits=self.n_shadow_models)
             # tr and ts are inverted when selecting the fold
@@ -58,14 +84,16 @@ class AloaPrivacyAttack(PrivacyAttack):
 
                 # Get the "IN" set
                 pred_tr_labels = shadow_model.predict(tr)
-                df_in = pd.DataFrame(tr)
+                pred_tr_proba = shadow_model.predict_proba(tr)
+                df_in = pd.DataFrame(pred_tr_proba)
                 df_in['class_label'] = pred_tr_labels
                 df_in['target_label'] = 'IN'
                 #print(classification_report(tr_l, pred_tr_labels, digits=3))
 
                 # Get the "OUT" set
                 pred_ts_labels = shadow_model.predict(ts)
-                df_out = pd.DataFrame(ts)
+                pred_ts_proba = shadow_model.predict_proba(ts)
+                df_out = pd.DataFrame(pred_ts_proba)
                 df_out['class_label'] = pred_ts_labels
                 df_out['target_label'] = 'OUT'
                 #print(classification_report(ts_l, pred_ts_labels, digits=3))
@@ -74,21 +102,22 @@ class AloaPrivacyAttack(PrivacyAttack):
                 attack_dataset.append(df_final)
         else:
             tr, ts, tr_l, ts_l = train_test_split(shadow_dataset, labels_shadow, stratify=labels_shadow, test_size=0.2)
-
             # Create and train the shadow model
             shadow_model = self._get_shadow_model()
             shadow_model.fit(tr, tr_l)
 
             # Get the "IN" set
             pred_tr_labels = shadow_model.predict(tr)
-            df_in = pd.DataFrame(tr)
+            pred_tr_proba = shadow_model.predict_proba(tr)
+            df_in = pd.DataFrame(pred_tr_proba)
             df_in['class_label'] = pred_tr_labels
             df_in['target_label'] = 'IN'
             #print(classification_report(tr_l, pred_tr_labels, digits=3))
 
             # Get the "OUT" set
             pred_ts_labels = shadow_model.predict(ts)
-            df_out = pd.DataFrame(ts)
+            pred_ts_proba = shadow_model.predict_proba(ts)
+            df_out = pd.DataFrame(pred_ts_proba)
             df_out['class_label'] = pred_ts_labels
             df_out['target_label'] = 'OUT'
             #print(classification_report(ts_l, pred_ts_labels, digits=3))
@@ -103,43 +132,10 @@ class AloaPrivacyAttack(PrivacyAttack):
         y = attack_dataset['target_label']
         attack_dataset.columns = attack_dataset.columns.astype(str)
         attack_dataset, _= undersampler.fit_resample(attack_dataset, y)
-        attack_dataset.to_csv('./data/attack_dataset_aloa.csv', index=False) # DO WE SAVE THE ATTACK DATASET?
+        attack_dataset.to_csv('./data/attack_dataset.csv', index=False) # DO WE SAVE THE ATTACK DATASET?
         return attack_dataset
 
-    def _get_robustness_score(self, dataset, class_labels, n_noise_samples):
-        percentage_deviation = (0.1, 0.50)
-        scores = []
-        index = 0
-        for row in tqdm(dataset.values):
-            variations = []
-            y_true = class_labels[index]
-            y_predicted = self.bb.predict(np.array([row]))
-            if y_true == y_predicted:
-                perturbed_row = row.copy()
-                variations = self._noise_neighborhood(perturbed_row, n_noise_samples, percentage_deviation)
-                output = self.bb.predict(variations)
-                score = np.mean(np.array(list(map(lambda x: 1 if x == y_true else 0, output))))
-                scores.append(score)
-            else:
-                scores.append(0)
-            index += 1
-        return scores
-
-    def _noise_neighborhood(self, row, n_noise_samples, percentage_deviation):
-        pmin = percentage_deviation[0]
-        pmax = percentage_deviation[1]
-        # Create a matrix by duplicating vect N times
-        vect_matrix = np.tile(row, (n_noise_samples, 1))
-
-        # Create a matrix of percentage perturbations to be applied to vect_matrix
-        sampl = np.random.uniform(low=pmin, high=pmax, size=(n_noise_samples, len(row)))
-        # Vector for adding or subtracking a value
-        sum_sub = np.random.choice([-1, 1], size=(n_noise_samples, len(row)))
-        # Here we apply the perturbation perturb
-        vect_matrix = vect_matrix + (vect_matrix * (sum_sub * sampl))
-        return vect_matrix
-
-    def _get_shadow_model(self):
-        if self.shadow_model_type == 'rf':
-            shadow_model = ShadowRandomForest()
-        return shadow_model
+    def _get_attack_model(self):
+        if self.attack_model_type == 'rf':
+            model =  AttackRandomForest()
+        return model

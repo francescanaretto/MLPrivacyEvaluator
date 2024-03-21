@@ -7,7 +7,7 @@ import numpy as np
 import sys
 from sklearn.metrics import classification_report
 from MLWrapper.wrappers import SklearnBlackBox
-from PrivacyAttacks.aloa_privacy_attack import AloaPrivacyAttack
+from PrivacyAttacks import AloaPrivacyAttack
 import warnings
 warnings.simplefilter("ignore", UserWarning)
 
