@@ -2,9 +2,12 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+
 from ._attack_model import AttackModel
 
+
 class AttackRandomForest(AttackModel):
+
     def __init__(self):
         self.model = RandomForestClassifier(n_estimators=100)
 

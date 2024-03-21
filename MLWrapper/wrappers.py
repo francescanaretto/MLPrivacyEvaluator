@@ -5,7 +5,9 @@ abstract class AbstractBbox.
 '''
 
 import pickle
+
 import pandas as pd
+
 from MLWrapper.bbox import AbstractBBox
 
 
@@ -13,6 +15,7 @@ class SklearnBlackBox(AbstractBBox):
     """
     Wrapper for scikit-learn models, e.g., random forest, decision tree
     """
+
     def __init__(self, filename: str):
         with open(filename, 'rb') as file:
             self.bbox = pickle.load(file)
@@ -28,10 +31,11 @@ class SklearnBlackBox(AbstractBBox):
 
 
 class KerasBlackBox(AbstractBBox):
+
     def __init__(self):
         pass
 
     def model(self):
         pass
 
-#TODO Add the wrappers for the pytorch models and the keras models.
+# TODO Add the wrappers for the pytorch models and the keras models.
