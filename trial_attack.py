@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import classification_report
 
-from MLWrapper import SklearnBlackBox
+from MLWrappers import SklearnBlackBox
 from PrivacyAttacks import MiaPrivacyAttack
 
 

@@ -10,7 +10,7 @@ from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
 
-from MLWrapper._bbox import AbstractBBox
+from MLWrappers._bbox import AbstractBBox
 from ShadowModels import ShadowRandomForest
 from AttackModels import AttackRandomForest
 from ._privacy_attack import PrivacyAttack

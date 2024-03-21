@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from MLWrapper._bbox import AbstractBBox
+from MLWrappers._bbox import AbstractBBox
 
 
 class PrivacyAttack(ABC):

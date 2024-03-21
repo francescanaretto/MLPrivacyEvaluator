@@ -1,4 +1,4 @@
-from MLWrapper._bbox import AbstractBBox
+from MLWrappers._bbox import AbstractBBox
 from PrivacyAttacks._privacy_attack import *
 import pandas as pd
 from typing import *
