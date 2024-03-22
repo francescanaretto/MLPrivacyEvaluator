@@ -25,4 +25,5 @@ class MLPrivacyEvaluator():
 
     def report(self, train_set: pd.DataFrame, test_set: pd.DataFrame, metrics='all'):
         # TODO Implement the reporting
-        pass
+        results = []
+        return results
