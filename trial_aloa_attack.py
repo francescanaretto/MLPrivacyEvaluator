@@ -13,7 +13,7 @@ from PrivacyAttacks import AloaPrivacyAttack
 
 warnings.simplefilter("ignore", UserWarning)
 
-DS_NAME = 'adult'
+DS_NAME = 'gaussian'
 DATA_FOLDER = f'./data/{DS_NAME}'
 
 N = 1

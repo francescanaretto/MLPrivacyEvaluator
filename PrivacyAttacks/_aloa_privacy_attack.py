@@ -3,7 +3,7 @@
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
 
@@ -14,17 +14,24 @@ from ._privacy_attack import PrivacyAttack
 
 class AloaPrivacyAttack(PrivacyAttack):
 
-    def __init__(self, black_box, n_shadow_models='1', shadow_model_type='rf'):
+    def __init__(self, black_box, n_shadow_models='1', shadow_model_type='rf',
+                 n_noise_samples_fit=100, n_noise_samples_predict=None):
         super().__init__(black_box)
         self.n_shadow_models = n_shadow_models
         self.shadow_model_type = shadow_model_type
+        self.n_noise_samples_fit = n_noise_samples_fit
+        if n_noise_samples_predict is None:
+            self.n_noise_samples_predict = n_noise_samples_fit
+        else:
+            self.n_noise_samples_predict = n_noise_samples_predict
         self.attack_model = None
+        self.name = 'aloa_attack'
 
-    def fit(self, shadow_dataset: pd.DataFrame, n_noise_samples=100, attack_model_path: str = './attack_models'):
+    def fit(self, shadow_dataset: pd.DataFrame, attack_model_path: str = './attack_models'):
         attack_dataset = self._get_attack_dataset(shadow_dataset)
         class_labels = attack_dataset.pop('class_label')
         target_labels = attack_dataset.pop('target_label')
-        scores = self._get_robustness_score(attack_dataset.copy(), class_labels,  n_noise_samples)
+        scores = self._get_robustness_score(attack_dataset.copy(), class_labels,  self.n_noise_samples_fit)
         # Convert IN/OUT to 1/0 for training the threshold model
         target_labels = np.array(list(map(lambda score: 0 if score == "OUT" else 1, target_labels)))
         th_model = AttackThresholdModel()
@@ -32,9 +39,9 @@ class AloaPrivacyAttack(PrivacyAttack):
         self.attack_model = th_model
         return th_model.threshold
 
-    def predict(self, X: pd.DataFrame, n_noise_samples=100):
+    def predict(self, X: pd.DataFrame):
         class_labels = self.bb.predict(X)
-        scores = self._get_robustness_score(X.copy(), class_labels,  n_noise_samples)
+        scores = self._get_robustness_score(X.copy(), class_labels,  self.n_noise_samples_predict)
         predictions = self.attack_model.predict(scores)
         predictions = np.array(list(map(lambda score: "IN" if score == 1 else "OUT", predictions)))
         return predictions

@@ -6,7 +6,7 @@ import pickle
 
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
 
@@ -23,6 +23,7 @@ class MiaPrivacyAttack(PrivacyAttack):
         self.n_shadow_models = n_shadow_models
         self.shadow_model_type = shadow_model_type
         self.attack_model_type = attack_model_type
+        self.name = 'mia_attack'
 
     def fit(self, shadow_dataset: pd.DataFrame, attack_model_path: str = './attack_models'):
         attack_dataset = self._get_attack_dataset(shadow_dataset)
@@ -75,7 +76,7 @@ class MiaPrivacyAttack(PrivacyAttack):
         for i in range(1, self.n_shadow_models+1):
             data = shadow_dataset.sample(frac=max(1/self.n_shadow_models, 0.2), replace=False)
             labels = labels_shadow[np.array(data.index)]
-            
+
             tr, ts, tr_l, ts_l = train_test_split(data, labels, stratify=labels, test_size=0.5)
             # Create and train the shadow model
             shadow_model = self._get_shadow_model()
