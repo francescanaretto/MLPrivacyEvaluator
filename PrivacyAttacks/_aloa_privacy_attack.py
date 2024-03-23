@@ -55,7 +55,7 @@ class AloaPrivacyAttack(PrivacyAttack):
         for i in range(1, self.n_shadow_models+1):
             data = shadow_dataset.sample(frac=max(1/self.n_shadow_models, 0.2), replace=False)
             labels = labels_shadow[np.array(data.index)]
-            
+
             tr, ts, tr_l, ts_l = train_test_split(data, labels, stratify=labels, test_size=0.5)
 
             # Create and train the shadow model

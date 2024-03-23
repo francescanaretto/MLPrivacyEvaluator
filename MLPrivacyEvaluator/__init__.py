@@ -1,8 +1,8 @@
 
 
-from ._privacy_evaluator import MLPrivacyEvaluator
+from ._privacy_evaluator import PrivacyEvaluator
 
 
 __all__ = [
-    "MLPrivacyEvaluator"
+    "PrivacyEvaluator"
 ]

@@ -6,7 +6,7 @@ import pandas as pd
 
 from MLWrappers import SklearnBlackBox
 from PrivacyAttacks import MiaPrivacyAttack, AloaPrivacyAttack
-from MLPrivacyEvaluator import MLPrivacyEvaluator
+from MLPrivacyEvaluator import PrivacyEvaluator
 
 
 DS_NAME = 'gaussian'
@@ -27,7 +27,7 @@ attacks = [mia, aloa]
 
 # We initialise the PrivacyEvaluator object
 # We pass the target model and the attacks we want to use
-evaluator = MLPrivacyEvaluator(target, attacks)
+evaluator = PrivacyEvaluator(target, attacks)
 
 # We use the fit() method to execute the attacks, starting from the shadow data
 evaluator.fit(shadow_set)
