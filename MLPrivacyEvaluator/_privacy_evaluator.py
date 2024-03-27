@@ -21,8 +21,10 @@ class PrivacyEvaluator():
     def __init__(self, black_box: AbstractBBox, privacy_attacks: list[PrivacyAttack]):
         self.bb = black_box
         self.privacy_attacks = privacy_attacks
+        self.save_folder = None
 
     def fit(self, shadow_set: pd.DataFrame, save_files='all', save_folder='./default_save_folder'):
+        self.save_folder = save_folder
         Path(save_folder).mkdir(parents=True, exist_ok=True)
         for attack in self.privacy_attacks:
             attack.fit(shadow_set, save_files=save_files, save_folder=save_folder)

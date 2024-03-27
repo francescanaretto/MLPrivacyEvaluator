@@ -77,6 +77,11 @@ class MiaPrivacyAttack(PrivacyAttack):
             shadow_model = ShadowRandomForest()
         return shadow_model
 
+    def _get_attack_model(self):
+        if self.attack_model_type == 'rf':
+            model = AttackRandomForest()
+        return model
+
     def _get_attack_dataset(self, shadow_dataset: pd.DataFrame, save_files='all', save_folder: str = None):
         attack_dataset = []
         data_save_folder = save_folder
@@ -97,9 +102,6 @@ class MiaPrivacyAttack(PrivacyAttack):
             # Create and train the shadow model
             shadow_model = self._get_shadow_model()
             shadow_model.fit(tr, tr_l)
-            if save_files == 'all':
-                with open(f'{save_folder}/shadow_model_model_{self.shadow_model_type}_{i}.sav', 'wb') as filename:
-                    pickle.dump(shadow_model, filename)
 
             # Get the "IN" set
             pred_tr_labels = shadow_model.predict(tr)
@@ -107,9 +109,6 @@ class MiaPrivacyAttack(PrivacyAttack):
             df_in = pd.DataFrame(pred_tr_proba)
             df_in['class_label'] = pred_tr_labels
             df_in['target_label'] = 'IN'
-            if save_files == 'all':
-                with open(f'{save_folder}/shadow_model_model_{self.shadow_model_type}_{i}_train_performance.txt', 'w', encoding='utf-8') as report:
-                    report.write(classification_report(tr_l, pred_tr_labels, digits=3))
 
             # Get the "OUT" set
             pred_ts_labels = shadow_model.predict(ts)
@@ -117,7 +116,12 @@ class MiaPrivacyAttack(PrivacyAttack):
             df_out = pd.DataFrame(pred_ts_proba)
             df_out['class_label'] = pred_ts_labels
             df_out['target_label'] = 'OUT'
+
             if save_files == 'all':
+                with open(f'{save_folder}/shadow_model_model_{self.shadow_model_type}_{i}.sav', 'wb') as filename:
+                    pickle.dump(shadow_model, filename)
+                with open(f'{save_folder}/shadow_model_model_{self.shadow_model_type}_{i}_train_performance.txt', 'w', encoding='utf-8') as report:
+                    report.write(classification_report(tr_l, pred_tr_labels, digits=3))
                 with open(f'{save_folder}/shadow_model_model_{self.shadow_model_type}_{i}_test_performance.txt', 'w', encoding='utf-8') as report:
                     report.write(classification_report(ts_l, pred_ts_labels, digits=3))
 
@@ -133,8 +137,3 @@ class MiaPrivacyAttack(PrivacyAttack):
         attack_dataset, _ = undersampler.fit_resample(attack_dataset, y)
         attack_dataset.to_csv(f'{data_save_folder}/attack_dataset.csv', index=False)
         return attack_dataset
-
-    def _get_attack_model(self):
-        if self.attack_model_type == 'rf':
-            model = AttackRandomForest()
-        return model

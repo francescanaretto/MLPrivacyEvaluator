@@ -34,7 +34,7 @@ attacks = [mia, aloa]
 evaluator = PrivacyEvaluator(target, attacks)
 
 # We use the fit() method to execute the attacks, starting from the shadow data
-evaluator.fit(shadow_set)
+evaluator.fit(shadow_set, save_folder='./new_save_folder')
 
 # Then we can obtain the performances using the report() method
 results = evaluator.report(train_set, test_set)
