@@ -1,6 +1,8 @@
 
 
 from tqdm import tqdm
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -27,7 +29,13 @@ class AloaPrivacyAttack(PrivacyAttack):
         self.attack_model = None
         self.name = 'aloa_attack'
 
-    def fit(self, shadow_dataset: pd.DataFrame, attack_model_path: str = './attack_models'):
+    def fit(self, shadow_dataset: pd.DataFrame, save_files='all', save_folder: str = None):
+        if save_folder is None:
+            save_folder = f'./{self.name}'
+        else:
+            save_folder += f'/{self.name}'
+        Path(save_folder).mkdir(parents=True, exist_ok=True)
+
         attack_dataset = self._get_attack_dataset(shadow_dataset)
         class_labels = attack_dataset.pop('class_label')
         target_labels = attack_dataset.pop('target_label')
