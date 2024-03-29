@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import classification_report
 
-from MLWrappers import SklearnBlackBox
+from MLWrappers import SklearnBlackBox, PyTorchBlackBox
 from PrivacyAttacks import MiaPrivacyAttack
 
 
@@ -18,7 +18,9 @@ DS_NAME = 'adult'
 DATA_FOLDER = f'./data/{DS_NAME}'
 
 for n in range(3, 4):
-    target = SklearnBlackBox(f'./models/rf_{DS_NAME}.pkl')
+    # target = SklearnBlackBox(f'./models/rf_{DS_NAME}.pkl')
+    target = PyTorchBlackBox(f'./models/nn_torch_{DS_NAME}.pt')
+
     attack = MiaPrivacyAttack(target, n_shadow_models=n)
 
     train_set = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_train_set.csv', skipinitialspace=True)[:3000]

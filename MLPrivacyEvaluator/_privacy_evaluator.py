@@ -1,6 +1,5 @@
 
 
-from typing import *
 from pathlib import Path
 
 import pandas as pd
@@ -30,7 +29,7 @@ class PrivacyEvaluator():
             attack.fit(shadow_set, save_files=save_files, save_folder=save_folder)
 
     def report(self, train_set: pd.DataFrame, test_set: pd.DataFrame, metrics='all'):
-        results = dict()
+        results = {}
 
         in_set = np.full(train_set.shape[0], 'IN')
         out_set = np.full(test_set.shape[0], 'OUT')
@@ -38,7 +37,7 @@ class PrivacyEvaluator():
         membership = np.concatenate((in_set, out_set))
 
         for attack in self.privacy_attacks:
-            attack_res = dict()
+            attack_res = {}
             predictions = attack.predict(data)
             attack_res['classification_report'] = classification_report(membership, predictions, digits=3, output_dict=True)
             results[attack.name] = attack_res

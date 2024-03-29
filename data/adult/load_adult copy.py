@@ -4,13 +4,15 @@ Script to preprocess the adult datset.
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 DS_NAME = "adult"
 
 filename = f"./data/{DS_NAME}/{DS_NAME}_raw.csv"
 columns = ['age', 'workclass', 'fnlwgt', 'education', 'education-num', 'marital-status', 'occupation',
            'relationship', 'race', 'sex', 'capital-gain', 'capital-loss', 'hours-per-week', 'native-country', 'salary']
-df = pd.read_csv(filename, skipinitialspace = True, usecols = columns)
+to_scale = ['age', 'fnlwgt', 'education-num', 'capital-gain', 'capital-loss', 'hours-per-week']
+df = pd.read_csv(filename, skipinitialspace=True, usecols=columns)
 
 # Droppping duplicates
 df.drop_duplicates()
@@ -37,8 +39,8 @@ df["class"] = df["class"].apply(lambda x: 0 if x == "<=50K" else 1)
 
 
 # One-hot encoding of categorical attributes
-categorical_classes = df.select_dtypes(include = ["object"]).columns.tolist()
-df = pd.get_dummies(df, columns = categorical_classes)
+categorical_classes = df.select_dtypes(include=["object"]).columns.tolist()
+df = pd.get_dummies(df, columns=categorical_classes)
 print(df.head())
 label = df.pop("class")
 df.pop('sex_Female')
@@ -62,6 +64,16 @@ for i in range(len(correlation_matrix.columns)):
 # Display highly correlated pairs
 for pair in correlated_pairs:
     print(f"Highly correlated variables: {pair[0]} and {pair[1]} with correlation {pair[2]}")
+
+scaler = StandardScaler()
+
+# Fit the scaler to the selected columns
+scaler.fit(df[to_scale])
+
+# Transform the selected columns
+df_scaled = df.copy()
+df_scaled[to_scale] = scaler.transform(df[to_scale])
+df = df_scaled
 
 
 train_set, shadow_set, train_label, shadow_label = train_test_split(df, label, stratify=label,

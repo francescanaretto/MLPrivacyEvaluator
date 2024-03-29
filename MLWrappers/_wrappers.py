@@ -6,6 +6,9 @@ abstract class AbstractBbox.
 
 import pickle
 
+import torch
+import pandas as pd
+
 from ._bbox import AbstractBBox
 
 
@@ -39,18 +42,23 @@ class KerasBlackBox(AbstractBBox):
 class PyTorchBlackBox(AbstractBBox):
     """Wrapper for PyTorch neural network models."""
 
-    def __init__(self, filename: str):
-        with open(filename, 'rb') as file:
-            self.bbox = pickle.load(file)
+    def __init__(self, filename: str, nn_class=None):
+        if nn_class is None:
+            self.bbox = torch.jit.load(filename)
+        else:
+            self.bbox = nn_class
+            self.bbox.load_state_dict(torch.load(filename))
         self.bbox.eval()
 
     def model(self):
         return self.bbox
 
-    def predict(self, X):
-        # TODO Implement pytorch predict
-        pass
+    def predict(self, X: pd.DataFrame):
+        X = torch.Tensor(X.values)
+        pred = self.bbox(X).max(1)[1].numpy()
+        return pred
 
-    def predict_proba(self, X):
-        # TODO Implement pytorch predict probabilities
-        pass
+    def predict_proba(self, X: pd.DataFrame):
+        X = torch.Tensor(X.values)
+        proba = self.bbox(X).detach().numpy()
+        return proba
