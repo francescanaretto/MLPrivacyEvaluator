@@ -17,7 +17,8 @@ from ._privacy_attack import PrivacyAttack
 class AloaPrivacyAttack(PrivacyAttack):
 
     def __init__(self, black_box, n_shadow_models='1', shadow_model_type='rf',
-                 n_noise_samples_fit=100, n_noise_samples_predict=None):
+                 n_noise_samples_fit=100, n_noise_samples_predict=None,
+                 shadow_test_size=0.5, undersample_attack_dataset=True):
         super().__init__(black_box)
         self.n_shadow_models = n_shadow_models
         self.shadow_model_type = shadow_model_type
@@ -28,6 +29,8 @@ class AloaPrivacyAttack(PrivacyAttack):
             self.n_noise_samples_predict = n_noise_samples_predict
         self.attack_model = None
         self.name = 'aloa_attack'
+        self.shadow_test_size = shadow_test_size
+        self.undersample_attack_dataset = undersample_attack_dataset
 
     def fit(self, shadow_dataset: pd.DataFrame, save_files='all', save_folder: str = None):
         if save_folder is None:
@@ -64,7 +67,7 @@ class AloaPrivacyAttack(PrivacyAttack):
             data = shadow_dataset.sample(frac=max(1/self.n_shadow_models, 0.2), replace=False)
             labels = labels_shadow[np.array(data.index)]
 
-            tr, ts, tr_l, ts_l = train_test_split(data, labels, stratify=labels, test_size=0.5)
+            tr, ts, tr_l, ts_l = train_test_split(data, labels, stratify=labels, test_size=self.shadow_test_size)
 
             # Create and train the shadow model
             shadow_model = self._get_shadow_model()
@@ -90,10 +93,11 @@ class AloaPrivacyAttack(PrivacyAttack):
         # Merge all sets and reset the index
         attack_dataset = pd.concat(attack_dataset)
         attack_dataset = attack_dataset.reset_index(drop=True)
-        undersampler = RandomUnderSampler(sampling_strategy='majority')
-        y = attack_dataset['target_label']
-        attack_dataset.columns = attack_dataset.columns.astype(str)
-        attack_dataset, _ = undersampler.fit_resample(attack_dataset, y)
+        if self.undersample_attack_dataset:
+            undersampler = RandomUnderSampler(sampling_strategy='majority')
+            y = attack_dataset['target_label']
+            attack_dataset.columns = attack_dataset.columns.astype(str)
+            attack_dataset, _ = undersampler.fit_resample(attack_dataset, y)
         attack_dataset.to_csv('./data/attack_dataset_aloa.csv', index=False)  # DO WE SAVE THE ATTACK DATASET?
         return attack_dataset
 

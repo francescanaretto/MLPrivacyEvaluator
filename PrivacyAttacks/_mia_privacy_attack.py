@@ -19,12 +19,15 @@ from ._privacy_attack import PrivacyAttack
 
 class MiaPrivacyAttack(PrivacyAttack):
 
-    def __init__(self, black_box: AbstractBBox, n_shadow_models=3, shadow_model_type='rf', attack_model_type='rf'):
+    def __init__(self, black_box: AbstractBBox, n_shadow_models=3, shadow_model_type='rf', attack_model_type='rf',
+                 shadow_test_size=0.5, undersample_attack_dataset=True):
         super().__init__(black_box)
         self.n_shadow_models = n_shadow_models
         self.shadow_model_type = shadow_model_type
         self.attack_model_type = attack_model_type
         self.name = 'mia_attack'
+        self.shadow_test_size = shadow_test_size
+        self.undersample_attack_dataset = undersample_attack_dataset
 
     def fit(self, shadow_dataset: pd.DataFrame, save_files='all', save_folder: str = None):
         if save_folder is None:
@@ -98,7 +101,7 @@ class MiaPrivacyAttack(PrivacyAttack):
             data = shadow_dataset.sample(frac=max(1/self.n_shadow_models, 0.2), replace=False)
             labels = labels_shadow[np.array(data.index)]
 
-            tr, ts, tr_l, ts_l = train_test_split(data, labels, stratify=labels, test_size=0.5)
+            tr, ts, tr_l, ts_l = train_test_split(data, labels, stratify=labels, test_size=self.shadow_test_size)
             # Create and train the shadow model
             shadow_model = self._get_shadow_model()
             shadow_model.fit(tr, tr_l)
@@ -132,9 +135,10 @@ class MiaPrivacyAttack(PrivacyAttack):
         attack_dataset = pd.concat(attack_dataset)
         attack_dataset = attack_dataset.reset_index(drop=True)
         # Facciamo undersampling alla fine? -- facciamo decidere all'utente
-        undersampler = RandomUnderSampler(sampling_strategy='majority')
-        y = attack_dataset['target_label']
-        attack_dataset.columns = attack_dataset.columns.astype(str)
-        attack_dataset, _ = undersampler.fit_resample(attack_dataset, y)
+        if self.undersample_attack_dataset:
+            undersampler = RandomUnderSampler(sampling_strategy='majority')
+            y = attack_dataset['target_label']
+            attack_dataset.columns = attack_dataset.columns.astype(str)
+            attack_dataset, _ = undersampler.fit_resample(attack_dataset, y)
         attack_dataset.to_csv(f'{data_save_folder}/attack_dataset.csv', index=False)
         return attack_dataset
