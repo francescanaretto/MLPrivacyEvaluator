@@ -98,7 +98,9 @@ class AloaPrivacyAttack(PrivacyAttack):
             y = attack_dataset['target_label']
             attack_dataset.columns = attack_dataset.columns.astype(str)
             attack_dataset, _ = undersampler.fit_resample(attack_dataset, y)
-        attack_dataset.to_csv('./data/attack_dataset_aloa.csv', index=False)  # DO WE SAVE THE ATTACK DATASET?
+        #self.attack_dataset_save_path = f'{data_save_folder}/attack_dataset.csv'
+        self.attack_dataset_save_path = './data/attack_dataset_aloa.csv'
+        attack_dataset.to_csv(self.attack_dataset_save_path, index=False)
         return attack_dataset
 
     def _get_robustness_score(self, dataset, class_labels, n_noise_samples):
@@ -108,11 +110,11 @@ class AloaPrivacyAttack(PrivacyAttack):
         for row in tqdm(dataset.values):
             variations = []
             y_true = class_labels[index]
-            y_predicted = self.bb.predict(np.array([row]))
+            y_predicted = self.bb.predict(pd.DataFrame(np.array([row])))
             if y_true == y_predicted:
                 perturbed_row = row.copy()
                 variations = self._noise_neighborhood(perturbed_row, n_noise_samples, percentage_deviation)
-                output = self.bb.predict(variations)
+                output = self.bb.predict(pd.DataFrame(variations))
                 score = np.mean(np.array(list(map(lambda x: 1 if x == y_true else 0, output))))
                 scores.append(score)
             else:

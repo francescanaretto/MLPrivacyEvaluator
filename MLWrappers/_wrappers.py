@@ -7,7 +7,9 @@ abstract class AbstractBbox.
 import pickle
 
 import torch
+from tensorflow import keras
 import pandas as pd
+import numpy as np
 
 from ._bbox import AbstractBBox
 
@@ -32,11 +34,20 @@ class SklearnBlackBox(AbstractBBox):
 class KerasBlackBox(AbstractBBox):
     """Wrapper for Keras neural network models."""
 
-    def __init__(self):
-        pass
+    def __init__(self, filename: str):
+        self.bbox = keras.models.load_model(filename)
 
     def model(self):
-        pass
+        return self.bbox
+
+    def predict(self, X):
+        pred = self.bbox.predict(X, verbose=False)
+        pred = np.argmax(pred, axis=1)
+        return pred
+
+    def predict_proba(self, X):
+        proba = self.bbox.predict(X, verbose=False)
+        return proba
 
 
 class PyTorchBlackBox(AbstractBBox):
@@ -53,12 +64,12 @@ class PyTorchBlackBox(AbstractBBox):
     def model(self):
         return self.bbox
 
-    def predict(self, X: pd.DataFrame):
+    def predict(self, X):
         X = torch.Tensor(X.values)
         pred = self.bbox(X).max(1)[1].numpy()
         return pred
 
-    def predict_proba(self, X: pd.DataFrame):
+    def predict_proba(self, X):
         X = torch.Tensor(X.values)
         proba = self.bbox(X).detach().numpy()
         return proba

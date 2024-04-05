@@ -43,7 +43,7 @@ class MyDataset(Dataset):
         return self.len
 
 
-DS_NAME = 'adult'
+DS_NAME = 'gaussian'
 DATA_FOLDER = f'./data/{DS_NAME}'
 MODEL_TYPE = 'nn_torch'
 
@@ -82,9 +82,6 @@ print(proba.shape)
 
 report = classification_report(train_label, pred, digits=3)
 print(report)
-
-
-
 
 
 model_save_path = f'./models/{MODEL_TYPE}_{DS_NAME}.pt'

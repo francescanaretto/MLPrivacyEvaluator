@@ -21,10 +21,13 @@ class AttackThresholdModel(AttackModel):
         else:
             raise ValueError('Invalid score type entered. Please use "accuracy", "precision" or "recall".')
 
-    def fit(self, x: np.array, y: np.array, thresholds: np.array = np.linspace(0, 1, 101), score_type: str = 'accuracy'):
+    def fit(self, x: np.array, y: np.array, thresholds: np.array = None, score_type: str = 'accuracy'):
         results = []
+        if thresholds is None:
+            thresholds = np.linspace(0, 1, 101)
         for t in thresholds:
-            th_data = np.array(list(map(lambda value: 0 if value <= t else 1, x)))
+            # th_data = np.array(list(map(lambda value: 0 if value <= t else 1, x)))
+            th_data = np.array([1 if value > t else 0 for value in x])
             score = self._get_score(score_type, y, th_data)
             results.append(score)
             # print(classification_report(y, th_data))
