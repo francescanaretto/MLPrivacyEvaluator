@@ -59,7 +59,7 @@ class MiaPrivacyAttack(PrivacyAttack):
             with open(f'{save_folder}/attack_model_{self.attack_model_type}_class_{c}_test_performance.txt', 'w', encoding='utf-8') as report:
                 report.write(classification_report(test_label, attack_model.predict(test_set), digits=3))
 
-            with open(f'{save_folder}/attack_model_{self.attack_model_type}_class_{c}.sav', 'wb') as filename:
+            with open(f'{save_folder}/attack_model_{self.attack_model_type}_class_{c}.pkl', 'wb') as filename:
                 pickle.dump(attack_model, filename)
 
             self.attack_models[c] = attack_model
@@ -121,7 +121,7 @@ class MiaPrivacyAttack(PrivacyAttack):
             df_out['target_label'] = 'OUT'
 
             if save_files == 'all':
-                with open(f'{save_folder}/shadow_model_{self.shadow_model_type}_{i}.sav', 'wb') as filename:
+                with open(f'{save_folder}/shadow_model_{self.shadow_model_type}_{i}.pkl', 'wb') as filename:
                     pickle.dump(shadow_model, filename)
                 with open(f'{save_folder}/shadow_model_{self.shadow_model_type}_{i}_train_performance.txt', 'w', encoding='utf-8') as report:
                     report.write(classification_report(tr_l, pred_tr_labels, digits=3))
@@ -134,7 +134,7 @@ class MiaPrivacyAttack(PrivacyAttack):
         # Merge all sets and reset the index
         attack_dataset = pd.concat(attack_dataset)
         attack_dataset = attack_dataset.reset_index(drop=True)
-        # Facciamo undersampling alla fine? -- facciamo decidere all'utente
+
         if self.undersample_attack_dataset:
             undersampler = RandomUnderSampler(sampling_strategy='majority')
             y = attack_dataset['target_label']

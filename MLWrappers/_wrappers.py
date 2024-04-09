@@ -65,11 +65,17 @@ class PyTorchBlackBox(AbstractBBox):
         return self.bbox
 
     def predict(self, X):
-        X = torch.Tensor(X.values)
+        if isinstance(X, np.ndarray):
+            X = torch.Tensor(X)
+        else:
+            X = torch.Tensor(X.values)
         pred = self.bbox(X).max(1)[1].numpy()
         return pred
 
     def predict_proba(self, X):
-        X = torch.Tensor(X.values)
+        if isinstance(X, np.ndarray):
+            X = torch.Tensor(X)
+        else:
+            X = torch.Tensor(X.values)
         proba = self.bbox(X).detach().numpy()
         return proba
