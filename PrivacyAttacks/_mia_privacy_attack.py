@@ -21,9 +21,8 @@ class MiaPrivacyAttack(PrivacyAttack):
 
     def __init__(self, black_box: AbstractBBox, n_shadow_models=3, shadow_model_type='rf', attack_model_type='rf',
                  shadow_test_size=0.5, undersample_attack_dataset=True):
-        super().__init__(black_box)
+        super().__init__(black_box, shadow_model_type)
         self.n_shadow_models = n_shadow_models
-        self.shadow_model_type = shadow_model_type
         self.attack_model_type = attack_model_type
         self.name = 'mia_attack'
         self.shadow_test_size = shadow_test_size
@@ -74,11 +73,6 @@ class MiaPrivacyAttack(PrivacyAttack):
             pred = self.attack_models[class_labels[idx]].predict(row.reshape(1, -1))
             predictions.extend(pred)
         return np.array(predictions)
-
-    def _get_shadow_model(self):
-        if self.shadow_model_type == 'rf':
-            shadow_model = ShadowRandomForest()
-        return shadow_model
 
     def _get_attack_model(self):
         if self.attack_model_type == 'rf':
