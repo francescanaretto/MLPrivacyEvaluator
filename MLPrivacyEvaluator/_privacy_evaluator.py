@@ -30,6 +30,7 @@ class PrivacyEvaluator():
 
     def report(self, train_set: pd.DataFrame, test_set: pd.DataFrame, metrics='all'):
         results = {}
+        Path(self.save_folder).mkdir(parents=True, exist_ok=True)
 
         in_set = np.full(train_set.shape[0], 'IN')
         out_set = np.full(test_set.shape[0], 'OUT')
@@ -37,9 +38,13 @@ class PrivacyEvaluator():
         membership = np.concatenate((in_set, out_set))
 
         for attack in self.privacy_attacks:
+            Path(self.save_folder+f'/{attack.name}/reports').mkdir(parents=True, exist_ok=True)
             attack_res = {}
             predictions = attack.predict(data)
-            attack_res['classification_report'] = classification_report(membership, predictions, digits=3, output_dict=True)
+            report = classification_report(membership, predictions, digits=3, output_dict=True)
+            attack_res['classification_report'] = report
+            with open(f'{self.save_folder}/{attack.name}/reports/classification_report.txt', 'w', encoding='utf-8') as filename:
+                filename.write(classification_report(membership, predictions, digits=3))
             results[attack.name] = attack_res
 
         return results

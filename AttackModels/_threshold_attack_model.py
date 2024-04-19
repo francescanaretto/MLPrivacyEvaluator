@@ -1,7 +1,7 @@
 
 
 import numpy as np
-from sklearn.metrics import precision_score, recall_score, accuracy_score, classification_report
+from sklearn.metrics import precision_score, recall_score, accuracy_score, classification_report, roc_curve
 
 from ._attack_model import AttackModel
 
@@ -24,7 +24,9 @@ class AttackThresholdModel(AttackModel):
     def fit(self, x: np.array, y: np.array, thresholds: np.array = None, score_type: str = 'accuracy'):
         results = []
         if thresholds is None:
-            thresholds = np.linspace(0, 1, 1001)
+            # thresholds = np.linspace(0, 1, 1001)
+            fpr, tpr, thresholds = roc_curve(y, x)
+            print(thresholds)
         for t in thresholds:
             # th_data = np.array(list(map(lambda value: 0 if value <= t else 1, x)))
             th_data = np.array([1 if value > t else 0 for value in x])

@@ -10,7 +10,7 @@ from ._shadow_model import ShadowModel
 class ShadowRandomForest(ShadowModel):
 
     def __init__(self):
-        self.model = RandomForestClassifier(n_estimators=100)
+        self.model = RandomForestClassifier(n_estimators=5)
 
     def fit(self, X: pd.DataFrame, y: np.array):
         self.model.fit(X, y)

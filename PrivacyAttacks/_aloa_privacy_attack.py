@@ -62,8 +62,12 @@ class AloaPrivacyAttack(PrivacyAttack):
         # Saving attack model and its performance
         with open(f'{save_folder}/threshold_attack_model_train_performance.txt', 'w', encoding='utf-8') as report:
             report.write(classification_report(target_labels, th_model.predict(scores), digits=3))
+            report.write('\n\n')
+            report.write(f'Threshold chosen: {th_model.threshold}')
         with open(f'{save_folder}/threshold_attack_model_test_performance.txt', 'w', encoding='utf-8') as report:
             report.write(classification_report(test_target_labels, th_model.predict(test_scores), digits=3))
+            report.write('\n\n')
+            report.write(f'Threshold chosen: {th_model.threshold}')
         with open(f'{save_folder}/threshold_attack_model.pkl', 'wb') as filename:
             pickle.dump(th_model, filename)
         return th_model.threshold
