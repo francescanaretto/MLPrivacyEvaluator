@@ -1,27 +1,31 @@
 """
-Implementation of the ALOA attack.
+Implementation of the Label-Only attack.
 """
 
 import pickle
-from tqdm import tqdm
 from pathlib import Path
 
+from tqdm import tqdm
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
 
-from ShadowModels import ShadowRandomForest
 from AttackModels import AttackThresholdModel
 from ._privacy_attack import PrivacyAttack
 
 
 class LabelOnlyPrivacyAttack(PrivacyAttack):
 
-    def __init__(self, black_box, n_shadow_models='1', shadow_model_type='rf',
-                 n_noise_samples_fit=100, n_noise_samples_predict=None,
-                 shadow_test_size=0.5, undersample_attack_dataset=True):
+    def __init__(self, black_box,
+                 n_shadow_models='1',
+                 shadow_model_type='rf',
+                 n_noise_samples_fit=100,
+                 n_noise_samples_predict=None,
+                 shadow_test_size=0.5,
+                 undersample_attack_dataset=True,
+                 prob_bit_flip=0.6):
         super().__init__(black_box)
         self.n_shadow_models = n_shadow_models
         self.shadow_model_type = shadow_model_type
@@ -34,6 +38,7 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
         self.name = 'label_only_attack'
         self.shadow_test_size = shadow_test_size
         self.undersample_attack_dataset = undersample_attack_dataset
+        self.prob_bit_flip = prob_bit_flip
 
     def fit(self, shadow_dataset: pd.DataFrame, save_files='all', save_folder: str = None):
         if save_folder is None:
@@ -139,19 +144,17 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
         return attack_dataset
 
     def _get_robustness_score(self, dataset, class_labels, n_noise_samples):
-        p = 0.6
-        stdev = 0.05
+        bin_idx, cont_idx = self._get_binary_continuous_features(dataset)
+        stdevs = np.array(dataset.std(axis=0))
+
         scores = []
         index = 0
         for row in tqdm(dataset.values):
-            variations = []
             y_true = class_labels[index]
-            # y_predicted = self.bb.predict(np.array([row]))
-            # y_predicted = self.bb.predict(pd.DataFrame(np.array([row])))
             y_predicted = self.bb.predict(pd.DataFrame([row]))
             if y_true == y_predicted:
                 perturbed_row = row.copy()
-                variations = self._generate_perturbed_records(perturbed_row, n_noise_samples, p, stdev)
+                variations = self._generate_perturbed_records(perturbed_row, bin_idx, cont_idx, n_noise_samples, stdevs)
                 output = self.bb.predict(pd.DataFrame(variations))
                 score = np.mean(np.array(list(map(lambda x: 1 if x == y_true else 0, output))))
                 scores.append(score)
@@ -160,11 +163,39 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
             index += 1
         return scores
 
-    def _generate_perturbed_records(self, row, n_noise_samples, p, stdev):
-        # TODO implement perturbed records generation
-        return np.array([])
+    def _generate_perturbed_records(self, row, bin_idx, cont_idx,  n_noise_samples, stdevs):
+        cont_part = row[cont_idx]
+        bin_part = row[bin_idx]
+        x_sampled = np.tile(np.copy(row), (n_noise_samples, 1))
 
-    def _get_shadow_model(self):
-        if self.shadow_model_type == 'rf':
-            shadow_model = ShadowRandomForest()
-        return shadow_model
+        bits_to_flip = np.random.binomial(1, self.prob_bit_flip, (n_noise_samples, len(bin_part)))
+
+        x_flipped = np.invert(bin_part.astype(bool), out=np.copy(x_sampled[:, bin_idx]),
+                              where=bits_to_flip.astype(bool)).astype(np.float64)
+
+        noise = stdevs[cont_idx] * np.random.randn(n_noise_samples, len(cont_part))
+        x_noisy = x_sampled[:, cont_idx] + noise
+
+        idx = list(np.concatenate([bin_idx, cont_idx]))
+        final_idx = [idx.index(x) for x in range(len(idx))]
+
+        x_sampled = np.concatenate([x_flipped, x_noisy], axis=1)
+        x_sampled = x_sampled[:, final_idx]
+        return x_sampled
+
+    def _get_binary_continuous_features(self, X: pd.DataFrame):
+        """
+        Returns the indexes of columns containing only binary features and only continuous features.
+        """
+        binary_indices = []
+        continuous_indices = []
+        for i, column in enumerate(X):
+            unique_values = set(X[column].unique())
+            if unique_values == {0, 1}:
+                binary_indices.append(i)
+            else:
+                continuous_indices.append(i)
+        return binary_indices, continuous_indices
+
+
+

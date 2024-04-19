@@ -12,7 +12,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
 
-from ShadowModels import ShadowRandomForest
 from AttackModels import AttackThresholdModel
 from ._privacy_attack import PrivacyAttack
 
@@ -148,10 +147,7 @@ class AloaPrivacyAttack(PrivacyAttack):
         scores = []
         index = 0
         for row in tqdm(dataset.values):
-            variations = []
             y_true = class_labels[index]
-            # y_predicted = self.bb.predict(np.array([row]))
-            # y_predicted = self.bb.predict(pd.DataFrame(np.array([row])))
             y_predicted = self.bb.predict(pd.DataFrame([row]))
             if y_true == y_predicted:
                 perturbed_row = row.copy()

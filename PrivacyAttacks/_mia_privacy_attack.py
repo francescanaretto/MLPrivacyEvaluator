@@ -12,7 +12,6 @@ from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
 
 from MLWrappers._bbox import AbstractBBox
-from ShadowModels import ShadowRandomForest
 from AttackModels import AttackRandomForest
 from ._privacy_attack import PrivacyAttack
 
