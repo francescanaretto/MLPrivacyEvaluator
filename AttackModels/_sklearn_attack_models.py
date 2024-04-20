@@ -11,7 +11,7 @@ from ._attack_model import AttackModel
 
 
 class AttackDecisionTree(AttackModel):
-    """Attack model based on RandomForestClassifier."""
+    """Attack model based on DecisionTreeClassifier."""
 
     def __init__(self):
         self.model = DecisionTreeClassifier(min_samples_leaf=10)

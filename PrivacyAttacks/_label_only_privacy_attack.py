@@ -51,8 +51,6 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
         class_labels = attack_dataset.pop('class_label')
         target_labels = attack_dataset.pop('target_label')
         scores = self._get_robustness_score(attack_dataset.copy(), class_labels,  self.n_noise_samples_fit)
-        # Convert IN/OUT to 1/0 for training the threshold model
-        target_labels = np.array(list(map(lambda score: 0 if score == "OUT" else 1, target_labels)))
 
         # FIXME Should we do a train-test split?
         scores, test_scores, target_labels, test_target_labels = train_test_split(scores, target_labels,
@@ -196,6 +194,3 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
             else:
                 continuous_indices.append(i)
         return binary_indices, continuous_indices
-
-
-
