@@ -21,12 +21,13 @@ class AloaPrivacyAttack(PrivacyAttack):
     def __init__(self, black_box,
                  n_shadow_models: int = 1,
                  shadow_model_type: str = 'rf',
+                 shadow_model_params: dict = {},
                  n_noise_samples_fit: int = 100,
                  n_noise_samples_predict: int | None = None,
                  shadow_test_size: float = 0.5,
                  undersample_attack_dataset: bool = True,
                  percentage_deviation: tuple[float, float] = (0.1, 0.5)):
-        super().__init__(black_box, shadow_model_type)
+        super().__init__(black_box, shadow_model_type, shadow_model_params)
         self.n_shadow_models = n_shadow_models
         self.n_noise_samples_fit = n_noise_samples_fit
         if n_noise_samples_predict is None:
@@ -102,7 +103,7 @@ class AloaPrivacyAttack(PrivacyAttack):
             tr, ts, tr_l, ts_l = train_test_split(data, labels, stratify=labels, test_size=self.shadow_test_size)
 
             # Create and train the shadow model
-            shadow_model = self._get_shadow_model()
+            shadow_model = self._get_shadow_model(**self.shadow_model_params)
             shadow_model.fit(tr, tr_l)
 
             # Get the "IN" set

@@ -12,7 +12,7 @@ from sklearn.metrics import classification_report
 from imblearn.under_sampling import RandomUnderSampler
 
 from MLWrappers._bbox import AbstractBBox
-from AttackModels import AttackRandomForest
+from AttackModels import AttackDecisionTree, AttackRandomForest
 from ._privacy_attack import PrivacyAttack
 
 
@@ -21,12 +21,15 @@ class MiaPrivacyAttack(PrivacyAttack):
     def __init__(self, black_box: AbstractBBox,
                  n_shadow_models: int = 3,
                  shadow_model_type: str = 'rf',
+                 shadow_model_params: dict = {},
                  attack_model_type: str = 'rf',
+                 attack_model_params: dict = {},
                  shadow_test_size: float = 0.5,
                  undersample_attack_dataset: bool = True):
-        super().__init__(black_box, shadow_model_type)
+        super().__init__(black_box, shadow_model_type, shadow_model_params)
         self.n_shadow_models = n_shadow_models
         self.attack_model_type = attack_model_type
+        self.attack_model_params = attack_model_params
         self.name = 'mia_attack'
         self.shadow_test_size = shadow_test_size
         self.undersample_attack_dataset = undersample_attack_dataset
@@ -52,7 +55,7 @@ class MiaPrivacyAttack(PrivacyAttack):
             tr.pop('class_label')  # Drop class attribute
             tr_l = tr.pop('target_label')  # Use IN/OUT as labels
 
-            attack_model = self._get_attack_model()
+            attack_model = self._get_attack_model(**self.attack_model_params)
 
             train_set, test_set, train_label, test_label = train_test_split(tr, tr_l, stratify=tr_l, test_size=0.2)
             attack_model.fit(train_set.values, train_label)
@@ -79,7 +82,9 @@ class MiaPrivacyAttack(PrivacyAttack):
 
     def _get_attack_model(self):
         if self.attack_model_type == 'rf':
-            model = AttackRandomForest()
+            model = AttackRandomForest(**self.attack_model_params)
+        elif self.attack_model_type == 'dt':
+            model = AttackDecisionTree(**self.attack_model_params)
         return model
 
     def _get_attack_dataset(self, shadow_dataset: pd.DataFrame, save_files='all', save_folder: str = None):
@@ -100,7 +105,7 @@ class MiaPrivacyAttack(PrivacyAttack):
 
             tr, ts, tr_l, ts_l = train_test_split(data, labels, stratify=labels, test_size=self.shadow_test_size)
             # Create and train the shadow model
-            shadow_model = self._get_shadow_model()
+            shadow_model = self._get_shadow_model(**self.shadow_model_params)
             shadow_model.fit(tr, tr_l)
 
             # Get the "IN" set
