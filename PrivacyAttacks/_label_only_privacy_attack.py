@@ -19,10 +19,10 @@ from ._privacy_attack import PrivacyAttack
 class LabelOnlyPrivacyAttack(PrivacyAttack):
 
     def __init__(self, black_box,
-                 n_shadow_models='1',
+                 n_shadow_models=1,
                  shadow_model_type='rf',
                  n_noise_samples_fit=100,
-                 n_noise_samples_predict=None,
+                 n_noise_samples_predict: int = None,
                  shadow_test_size=0.5,
                  undersample_attack_dataset=True,
                  prob_bit_flip=0.6):

@@ -19,13 +19,13 @@ from ._privacy_attack import PrivacyAttack
 class AloaPrivacyAttack(PrivacyAttack):
 
     def __init__(self, black_box,
-                 n_shadow_models='1',
-                 shadow_model_type='rf',
-                 n_noise_samples_fit=100,
-                 n_noise_samples_predict=None,
-                 shadow_test_size=0.5,
-                 undersample_attack_dataset=True,
-                 percentage_deviation=(0.1, 0.5)):
+                 n_shadow_models: int = 1,
+                 shadow_model_type: str = 'rf',
+                 n_noise_samples_fit: int = 100,
+                 n_noise_samples_predict: int | None = None,
+                 shadow_test_size: float = 0.5,
+                 undersample_attack_dataset: bool = True,
+                 percentage_deviation: tuple[float, float] = (0.1, 0.5)):
         super().__init__(black_box, shadow_model_type)
         self.n_shadow_models = n_shadow_models
         self.n_noise_samples_fit = n_noise_samples_fit
@@ -77,14 +77,14 @@ class AloaPrivacyAttack(PrivacyAttack):
             pickle.dump(th_model, filename)
         return th_model.threshold
 
-    def predict(self, X: pd.DataFrame):
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
         class_labels = self.bb.predict(X)
         scores = self._get_robustness_score(X.copy(), class_labels,  self.n_noise_samples_predict)
         predictions = self.attack_model.predict(scores)
         predictions = np.array(list(map(lambda score: "IN" if score == 1 else "OUT", predictions)))
         return predictions
 
-    def _get_attack_dataset(self, shadow_dataset: pd.DataFrame, save_files='all', save_folder: str = None):
+    def _get_attack_dataset(self, shadow_dataset: pd.DataFrame, save_files='all', save_folder: str = None) -> pd.DataFrame:
         attack_dataset = []
         data_save_folder = save_folder
 

@@ -4,13 +4,15 @@ Script to preprocess the adult datset.
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 DS_NAME = "adult"
 
 filename = f"./data/{DS_NAME}/{DS_NAME}_raw.csv"
 columns = ['age', 'workclass', 'fnlwgt', 'education', 'education-num', 'marital-status', 'occupation',
            'relationship', 'race', 'sex', 'capital-gain', 'capital-loss', 'hours-per-week', 'native-country', 'salary']
-df = pd.read_csv(filename, skipinitialspace = True, usecols = columns)
+to_scale = ['age', 'fnlwgt', 'education-num', 'capital-gain', 'capital-loss', 'hours-per-week']
+df = pd.read_csv(filename, skipinitialspace=True, usecols=columns)
 
 # Droppping duplicates
 df.drop_duplicates()
@@ -33,11 +35,46 @@ df.rename(columns = {"salary": "class"}, inplace = True)
 # Binarisation of class attribute
 df["class"] = df["class"].apply(lambda x: 0 if x == "<=50K" else 1)
 
-# One-hot encoding of categorical attributes
-categorical_classes = df.select_dtypes(include = ["object"]).columns.tolist()
-df = pd.get_dummies(df, columns = categorical_classes)
 
+
+
+# One-hot encoding of categorical attributes
+categorical_classes = df.select_dtypes(include=["object"]).columns.tolist()
+df = pd.get_dummies(df, columns=categorical_classes)
+print(df.head())
 label = df.pop("class")
+df.pop('sex_Female')
+df.pop('marital-status_Married-civ-spouse')
+df.pop('race_Black')
+
+correlation_matrix = df.corr()
+print(correlation_matrix.shape)
+
+# Set a correlation threshold (e.g., 0.8)
+threshold = 0.70
+
+# Find pairs of highly correlated variables
+correlated_pairs = []
+for i in range(len(correlation_matrix.columns)):
+    for j in range(i):
+        if abs(correlation_matrix.iloc[i, j]) > threshold:
+            colname = correlation_matrix.columns[i]
+            correlated_pairs.append((colname, correlation_matrix.index[j], correlation_matrix.iloc[i, j]))
+
+# Display highly correlated pairs
+for pair in correlated_pairs:
+    print(f"Highly correlated variables: {pair[0]} and {pair[1]} with correlation {pair[2]}")
+
+scaler = StandardScaler()
+
+# Fit the scaler to the selected columns
+scaler.fit(df[to_scale])
+
+# Transform the selected columns
+df_scaled = df.copy()
+df_scaled[to_scale] = scaler.transform(df[to_scale])
+df = df_scaled
+
 
 train_set, shadow_set, train_label, shadow_label = train_test_split(df, label, stratify=label,
                                                                     train_size = 0.80, random_state = 14)

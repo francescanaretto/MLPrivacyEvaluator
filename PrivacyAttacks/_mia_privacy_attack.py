@@ -18,8 +18,12 @@ from ._privacy_attack import PrivacyAttack
 
 class MiaPrivacyAttack(PrivacyAttack):
 
-    def __init__(self, black_box: AbstractBBox, n_shadow_models=3, shadow_model_type='rf', attack_model_type='rf',
-                 shadow_test_size=0.5, undersample_attack_dataset=True):
+    def __init__(self, black_box: AbstractBBox,
+                 n_shadow_models: int = 3,
+                 shadow_model_type: str = 'rf',
+                 attack_model_type: str = 'rf',
+                 shadow_test_size: float = 0.5,
+                 undersample_attack_dataset: bool = True):
         super().__init__(black_box, shadow_model_type)
         self.n_shadow_models = n_shadow_models
         self.attack_model_type = attack_model_type
