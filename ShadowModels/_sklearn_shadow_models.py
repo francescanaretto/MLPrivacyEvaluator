@@ -13,7 +13,7 @@ from ._shadow_model import ShadowModel
 
 class ShadowDecisionTree(ShadowModel):
 
-    def __init__(self, **params):
+    def __init__(self, params):
         self.model = DecisionTreeClassifier(**params)
 
     def fit(self, X: pd.DataFrame, y: np.array):
@@ -31,8 +31,9 @@ class ShadowDecisionTree(ShadowModel):
 
 class ShadowRandomForest(ShadowModel):
 
-    def __init__(self, **params):
+    def __init__(self, params):
         self.model = RandomForestClassifier(**params)
+        print(self.model.get_params())
 
     def fit(self, X: pd.DataFrame, y: np.array):
         self.model.fit(X, y)

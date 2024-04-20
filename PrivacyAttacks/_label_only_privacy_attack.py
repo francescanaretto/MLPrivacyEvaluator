@@ -102,7 +102,7 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
             tr, ts, tr_l, ts_l = train_test_split(data, labels, stratify=labels, test_size=self.shadow_test_size)
 
             # Create and train the shadow model
-            shadow_model = self._get_shadow_model(**self.shadow_model_params)
+            shadow_model = self._get_shadow_model()
             shadow_model.fit(tr, tr_l)
 
             # Get the "IN" set

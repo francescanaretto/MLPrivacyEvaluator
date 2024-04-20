@@ -30,7 +30,7 @@ class PrivacyAttack(ABC):
 
     def _get_shadow_model(self):
         if self.shadow_model_type == 'rf':
-            shadow_model = ShadowRandomForest(**self.shadow_model_params)
+            shadow_model = ShadowRandomForest(self.shadow_model_params)
         elif self.shadow_model_type == 'dt':
-            shadow_model = ShadowDecisionTree(**self.shadow_model_params)
+            shadow_model = ShadowDecisionTree(self.shadow_model_params)
         return shadow_model

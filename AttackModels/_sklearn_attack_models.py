@@ -13,7 +13,7 @@ from ._attack_model import AttackModel
 class AttackDecisionTree(AttackModel):
     """Attack model based on DecisionTreeClassifier."""
 
-    def __init__(self, **params):
+    def __init__(self, params):
         self.model = DecisionTreeClassifier(**params)
 
     def fit(self, X: pd.DataFrame, y: np.ndarray):
@@ -29,7 +29,7 @@ class AttackDecisionTree(AttackModel):
 class AttackRandomForest(AttackModel):
     """Attack model based on RandomForestClassifier."""
 
-    def __init__(self, **params):
+    def __init__(self, params):
         self.model = RandomForestClassifier(**params)
 
     def fit(self, X: pd.DataFrame, y: np.ndarray):
