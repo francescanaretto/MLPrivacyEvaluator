@@ -1,13 +1,16 @@
 """
-This module contains the attack models used for
-prediction.
+This package contains the attack models that can be used within the privacy attacks.
 """
 
-from ._random_forest_attack_model import AttackRandomForest
+from ._sklearn_attack_models import (
+    AttackDecisionTree,
+    AttackRandomForest
+)
 from ._threshold_attack_model import AttackThresholdModel
 
 
 __all__ = [
+    "AttackDecisionTree",
     "AttackRandomForest",
     "AttackThresholdModel"
 ]

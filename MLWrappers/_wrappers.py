@@ -1,6 +1,6 @@
 '''
-In this file are contained the wrappers which implement the AbstractBbox class and methods.
-If you don't find the wrapper for your model here, you can add yours by extending the
+This module contains the wrappers implementing the AbstractBBox class and methods.
+If you do not find the wrapper for your model here, you can add your own wrapper by extending the
 abstract class AbstractBbox.
 '''
 
@@ -24,10 +24,10 @@ class SklearnBlackBox(AbstractBBox):
     def model(self):
         return self.bbox
 
-    def predict(self, X):
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
         return self.bbox.predict(X)
 
-    def predict_proba(self, X):
+    def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         return self.bbox.predict_proba(X)
 
 
@@ -40,12 +40,12 @@ class KerasBlackBox(AbstractBBox):
     def model(self):
         return self.bbox
 
-    def predict(self, X):
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
         pred = self.bbox.predict(X, verbose=False)
         pred = np.argmax(pred, axis=1)
         return pred
 
-    def predict_proba(self, X):
+    def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         proba = self.bbox.predict(X, verbose=False)
         return proba
 
@@ -64,15 +64,12 @@ class PyTorchBlackBox(AbstractBBox):
     def model(self):
         return self.bbox
 
-    def predict(self, X):
-        if isinstance(X, np.ndarray):
-            X = torch.Tensor(X)
-        else:
-            X = torch.Tensor(X.values)
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        X = torch.Tensor(X.values)
         pred = self.bbox(X).max(1)[1].numpy()
         return pred
 
-    def predict_proba(self, X):
+    def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         if isinstance(X, np.ndarray):
             X = torch.Tensor(X)
         else:

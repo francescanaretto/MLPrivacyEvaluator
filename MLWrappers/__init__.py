@@ -1,5 +1,5 @@
 """
-This module contains all the implemented wrappers.
+This package contains the wrappers for ML models.
 """
 
 from ._bbox import AbstractBBox
