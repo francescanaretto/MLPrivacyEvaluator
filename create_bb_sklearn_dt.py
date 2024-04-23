@@ -7,9 +7,10 @@ import pickle
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report
+from imblearn.under_sampling import RandomUnderSampler
 
 
-DS_NAME = 'gaussian'
+DS_NAME = 'adult'
 DATA_FOLDER = f'./data/{DS_NAME}'
 MODEL_TYPE = 'dt'
 
@@ -21,7 +22,9 @@ test_label = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_test_label.csv', ski
 print(train_set.shape)
 print(train_label.shape)
 
-model = DecisionTreeClassifier()
+model = DecisionTreeClassifier(min_samples_leaf=5, max_depth=8)
+undersampler = RandomUnderSampler(sampling_strategy='majority')
+train_set, train_label = undersampler.fit_resample(train_set, train_label)
 model.fit(train_set.values, train_label)
 
 train_pred = model.predict(train_set)
@@ -30,8 +33,8 @@ train_proba = model.predict_proba(train_set)
 test_pred = model.predict(test_set)
 test_proba = model.predict_proba(test_set)
 
-print(classification_report(train_label, train_pred))
-print(classification_report(test_label, test_pred))
+print(classification_report(train_label, train_pred, digits=3))
+print(classification_report(test_label, test_pred, digits=3))
 
-with open(f'./models/{MODEL_TYPE}_{DS_NAME}.pkl', 'wb') as model_save_path:
+with open(f'./models/{DS_NAME}_{MODEL_TYPE}.pkl', 'wb') as model_save_path:
     pickle.dump(model, model_save_path)

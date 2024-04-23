@@ -12,17 +12,9 @@ from sklearn.metrics import classification_report
 from MLWrappers import SklearnBlackBox, PyTorchBlackBox, KerasBlackBox
 from PrivacyAttacks import MiaPrivacyAttack
 
-
-config = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=0, 
-                        inter_op_parallelism_threads=2, 
-                        allow_soft_placement=True,
-                        device_count = {'CPU': 1})
-
-session = tf.compat.v1.Session(config=config)
-
 warnings.simplefilter("ignore", UserWarning)
 
-DS_NAME = 'adult'
+DS_NAME = 'gaussian'
 DATA_FOLDER = f'./data/{DS_NAME}'
 
 for n in range(3, 4):
@@ -30,7 +22,7 @@ for n in range(3, 4):
     # target = PyTorchBlackBox(f'./models/nn_torch_{DS_NAME}.pt')
     # target = KerasBlackBox(f'./models/nn_keras_{DS_NAME}.keras')
 
-    attack = MiaPrivacyAttack(target, n_shadow_models=n)
+    attack = MiaPrivacyAttack(target, n_shadow_models=n, voting_model=False)
 
     train_set = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_train_set.csv', skipinitialspace=True)
     train_label = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_train_label.csv', skipinitialspace=True).to_numpy().ravel()

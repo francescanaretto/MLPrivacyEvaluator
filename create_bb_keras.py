@@ -26,7 +26,7 @@ def get_nn_model(input_dim):
     return model
 
 
-DS_NAME = 'gaussian'
+DS_NAME = 'adult'
 DATA_FOLDER = f'./data/{DS_NAME}'
 
 train_set = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_train_set.csv', skipinitialspace=True)
@@ -61,4 +61,4 @@ test_prediction = np.argmax(test_prediction, axis=1)
 report = classification_report(test_label, test_prediction, digits=3)
 print(report)
 
-model.save(f'./models/nn_keras_{DS_NAME}.keras')
+model.save(f'./models/{DS_NAME}_nn_keras.keras')

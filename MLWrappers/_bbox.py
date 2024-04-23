@@ -16,18 +16,12 @@ class AbstractBBox(ABC):
 
     @abstractmethod
     def model(self):
-        """
-        Returns the model object.
-        """
+        """Returns the model object."""
 
     @abstractmethod
     def predict(self, X: pd.DataFrame) -> np.ndarray:
-        """
-        Returns the predicted labels for the input data.
-        """
+        """Returns the predicted labels for the input data."""
 
     @abstractmethod
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
-        """
-        Returns the predicted probability vectors for the input data.
-        """
+        """Returns the predicted probability vectors for the input data."""

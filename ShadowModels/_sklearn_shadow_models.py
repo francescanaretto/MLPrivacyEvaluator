@@ -33,7 +33,6 @@ class ShadowRandomForest(ShadowModel):
 
     def __init__(self, params):
         self.model = RandomForestClassifier(**params)
-        print(self.model.get_params())
 
     def fit(self, X: pd.DataFrame, y: np.array):
         self.model.fit(X, y)

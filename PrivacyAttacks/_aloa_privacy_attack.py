@@ -21,9 +21,9 @@ class AloaPrivacyAttack(PrivacyAttack):
     def __init__(self, black_box,
                  n_shadow_models: int = 1,
                  shadow_model_type: str = 'rf',
-                 shadow_model_params: dict = {},
-                 n_noise_samples_fit: int = 100,
-                 n_noise_samples_predict: int | None = None,
+                 shadow_model_params: dict = None,
+                 n_noise_samples_fit: int = 1000,
+                 n_noise_samples_predict: int = None,
                  shadow_test_size: float = 0.5,
                  undersample_attack_dataset: bool = True,
                  percentage_deviation: tuple[float, float] = (0.1, 0.5)):
@@ -52,10 +52,10 @@ class AloaPrivacyAttack(PrivacyAttack):
         class_labels = attack_dataset.pop('class_label')
         target_labels = attack_dataset.pop('target_label')
         scores = self._get_robustness_score(attack_dataset.copy(), class_labels,  self.n_noise_samples_fit)
+        pd.DataFrame(scores).to_csv(f'{save_folder}/robustness_scores.csv', index=False)
 
         # FIXME Should we do a train-test split?
-        scores, test_scores, target_labels, test_target_labels = train_test_split(scores, target_labels,
-                                                                                  stratify=target_labels, test_size=0.2)
+        # scores, test_scores, target_labels, test_target_labels = train_test_split(scores, target_labels, stratify=target_labels, test_size=0.2)
 
         th_model = AttackThresholdModel()
         th_model.fit(scores, target_labels)
@@ -68,10 +68,10 @@ class AloaPrivacyAttack(PrivacyAttack):
             report.write(classification_report(target_labels, th_model.predict(scores), digits=3))
             report.write('\n\n')
             report.write(f'Threshold chosen: {th_model.threshold}')
-        with open(f'{save_folder}/threshold_attack_model_test_performance.txt', 'w', encoding='utf-8') as report:
-            report.write(classification_report(test_target_labels, th_model.predict(test_scores), digits=3))
-            report.write('\n\n')
-            report.write(f'Threshold chosen: {th_model.threshold}')
+        # with open(f'{save_folder}/threshold_attack_model_test_performance.txt', 'w', encoding='utf-8') as report:
+        #     report.write(classification_report(test_target_labels, th_model.predict(test_scores), digits=3))
+        #     report.write('\n\n')
+        #     report.write(f'Threshold chosen: {th_model.threshold}')
         with open(f'{save_folder}/threshold_attack_model.pkl', 'wb') as filename:
             pickle.dump(th_model, filename)
         return th_model.threshold
@@ -80,7 +80,7 @@ class AloaPrivacyAttack(PrivacyAttack):
         class_labels = self.bb.predict(X)
         scores = self._get_robustness_score(X.copy(), class_labels,  self.n_noise_samples_predict)
         predictions = self.attack_model.predict(scores)
-        predictions = np.array(list(map(lambda score: "IN" if score == 1 else "OUT", predictions)))
+        # predictions = np.array(list(map(lambda score: "IN" if score == 1 else "OUT", predictions)))
         return predictions
 
     def _get_attack_dataset(self, shadow_dataset: pd.DataFrame, save_files='all', save_folder: str = None) -> pd.DataFrame:
@@ -137,7 +137,8 @@ class AloaPrivacyAttack(PrivacyAttack):
             undersampler = RandomUnderSampler(sampling_strategy='majority')
             y = attack_dataset['target_label']
             attack_dataset.columns = attack_dataset.columns.astype(str)
-            attack_dataset, _ = undersampler.fit_resample(attack_dataset, y)
+            attack_dataset, y = undersampler.fit_resample(attack_dataset, y)
+            attack_dataset['target_label'] = y
         self.attack_dataset_save_path = f'{data_save_folder}/attack_dataset.csv'
         attack_dataset.to_csv(self.attack_dataset_save_path, index=False)
         return attack_dataset
@@ -157,6 +158,8 @@ class AloaPrivacyAttack(PrivacyAttack):
             else:
                 scores.append(0)
             index += 1
+        print(scores)
+        print(np.unique(scores, return_counts=True))
         return scores
 
     def _generate_noise_neighborhood(self, row, n_noise_samples):

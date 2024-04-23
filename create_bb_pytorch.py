@@ -43,7 +43,7 @@ class MyDataset(Dataset):
         return self.len
 
 
-DS_NAME = 'gaussian'
+DS_NAME = 'adult'
 DATA_FOLDER = f'./data/{DS_NAME}'
 MODEL_TYPE = 'nn_torch'
 
@@ -83,12 +83,11 @@ print(proba.shape)
 report = classification_report(train_label, pred, digits=3)
 print(report)
 
-
-model_save_path = f'./models/{MODEL_TYPE}_{DS_NAME}.pt'
+model_save_path = f'./models/{DS_NAME}_{MODEL_TYPE}.pt'
 model_jit = torch.jit.script(model)
 model_jit.save(model_save_path)
 
-model_save_path = f'./models/{MODEL_TYPE}_{DS_NAME}.pkl'
+model_save_path = f'./models/{DS_NAME}_{MODEL_TYPE}.pkl'
 torch.save(model.state_dict(), model_save_path)
 
 

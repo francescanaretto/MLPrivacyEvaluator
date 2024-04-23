@@ -1,5 +1,5 @@
 """
-This module includes the implemented privacy attacks.
+This package includes the implemented privacy attacks.
 """
 
 from ._privacy_attack import PrivacyAttack

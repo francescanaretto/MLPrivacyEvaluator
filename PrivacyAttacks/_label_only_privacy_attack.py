@@ -21,9 +21,9 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
     def __init__(self, black_box,
                  n_shadow_models: int = 1,
                  shadow_model_type: str = 'rf',
-                 shadow_model_params: dict = {},
-                 n_noise_samples_fit: int = 100,
-                 n_noise_samples_predict: int | None = None,
+                 shadow_model_params: dict = None,
+                 n_noise_samples_fit: int = 1000,
+                 n_noise_samples_predict: int = None,
                  shadow_test_size: float = 0.5,
                  undersample_attack_dataset: bool = True,
                  prob_bit_flip: float = 0.6):
@@ -79,10 +79,10 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
         class_labels = self.bb.predict(X)
         scores = self._get_robustness_score(X.copy(), class_labels,  self.n_noise_samples_predict)
         predictions = self.attack_model.predict(scores)
-        predictions = np.array(list(map(lambda score: "IN" if score == 1 else "OUT", predictions)))
+        # predictions = np.array(list(map(lambda score: "IN" if score == 1 else "OUT", predictions)))
         return predictions
 
-    def _get_attack_dataset(self, shadow_dataset: pd.DataFrame, save_files='all', save_folder: str = None):
+    def _get_attack_dataset(self, shadow_dataset: pd.DataFrame, save_files='all', save_folder: str = None) -> pd.DataFrame:
         attack_dataset = []
         data_save_folder = save_folder
 
@@ -136,7 +136,8 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
             undersampler = RandomUnderSampler(sampling_strategy='majority')
             y = attack_dataset['target_label']
             attack_dataset.columns = attack_dataset.columns.astype(str)
-            attack_dataset, _ = undersampler.fit_resample(attack_dataset, y)
+            attack_dataset, y = undersampler.fit_resample(attack_dataset, y)
+            attack_dataset['target_label'] = y
         self.attack_dataset_save_path = f'{data_save_folder}/attack_dataset.csv'
         attack_dataset.to_csv(self.attack_dataset_save_path, index=False)
         return attack_dataset
@@ -164,10 +165,10 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
     def _generate_perturbed_records(self, row, bin_idx, cont_idx,  n_noise_samples, stdevs):
         cont_part = row[cont_idx]
         bin_part = row[bin_idx]
+
         x_sampled = np.tile(np.copy(row), (n_noise_samples, 1))
 
         bits_to_flip = np.random.binomial(1, self.prob_bit_flip, (n_noise_samples, len(bin_part)))
-
         x_flipped = np.invert(bin_part.astype(bool), out=np.copy(x_sampled[:, bin_idx]),
                               where=bits_to_flip.astype(bool)).astype(np.float64)
 
