@@ -94,7 +94,6 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
         labels_shadow = self.bb.predict(shadow_dataset)
 
         # Train the shadow models
-        print(f'Each shadow model uses {max(1/self.n_shadow_models, 0.2)*100:.3f} % of the data')
         for i in range(1, self.n_shadow_models+1):
             data = shadow_dataset.sample(frac=max(1/self.n_shadow_models, 0.2), replace=False)
             labels = labels_shadow[np.array(data.index)]

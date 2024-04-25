@@ -95,7 +95,6 @@ class AloaPrivacyAttack(PrivacyAttack):
         labels_shadow = self.bb.predict(shadow_dataset)
 
         # Train the shadow models
-        print(f'Each shadow model uses {max(1/self.n_shadow_models, 0.2)*100:.3f} % of the data')
         for i in range(1, self.n_shadow_models+1):
             data = shadow_dataset.sample(frac=max(1/self.n_shadow_models, 0.2), replace=False)
             labels = labels_shadow[np.array(data.index)]
@@ -158,8 +157,8 @@ class AloaPrivacyAttack(PrivacyAttack):
             else:
                 scores.append(0)
             index += 1
-        print(scores)
-        print(np.unique(scores, return_counts=True))
+        # print(scores)
+        # print(np.unique(scores, return_counts=True))
         return scores
 
     def _generate_noise_neighborhood(self, row, n_noise_samples):
