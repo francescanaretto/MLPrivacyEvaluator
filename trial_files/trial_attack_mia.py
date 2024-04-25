@@ -18,18 +18,18 @@ DS_NAME = 'adult'
 DATA_FOLDER = f'./data/{DS_NAME}'
 
 target = SklearnBlackBox(f'./models/{DS_NAME}_rf.pkl')
-# target = PyTorchBlackBox(f'./models/nn_torch_{DS_NAME}.pt')
-# target = KerasBlackBox(f'./models/nn_keras_{DS_NAME}.keras')
+# target = PyTorchBlackBox(f'./models/{DS_NAME}_nn_torch.pt')
+# target = KerasBlackBox(f'./models/{DS_NAME}_nn_keras.keras')
 
 attack = MiaPrivacyAttack(target, n_shadow_models=3, voting_model=False,
                           shadow_model_type='rf',
                           shadow_model_params={'n_estimators': 3})
 
-train_set = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_train_set.csv', skipinitialspace=True)
+train_set = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_train_set.csv', skipinitialspace=True)[:1000]
 train_label = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_train_label.csv', skipinitialspace=True).to_numpy().ravel()
-test_set = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_test_set.csv', skipinitialspace=True)
+test_set = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_test_set.csv', skipinitialspace=True)[:1000]
 test_label = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_original_test_label.csv', skipinitialspace=True).to_numpy().ravel()
-shadow_data = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_shadow_set.csv', skipinitialspace=True)
+shadow_data = pd.read_csv(f'{DATA_FOLDER}/{DS_NAME}_shadow_set.csv', skipinitialspace=True)[:1000]
 
 attack.fit(shadow_data)
 

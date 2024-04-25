@@ -48,8 +48,8 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
         Path(save_folder).mkdir(parents=True, exist_ok=True)
 
         attack_dataset = self._get_attack_dataset(shadow_dataset, save_files=save_files, save_folder=save_folder)
-        class_labels = attack_dataset.pop('class_label')
-        target_labels = attack_dataset.pop('target_label')
+        class_labels = np.array(attack_dataset.pop('class_label'))
+        target_labels = np.array(attack_dataset.pop('target_label'))
         scores = self._get_robustness_score(attack_dataset.copy(), class_labels,  self.n_noise_samples_fit)
 
         # FIXME Should we do a train-test split?

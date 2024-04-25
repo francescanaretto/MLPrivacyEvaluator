@@ -85,7 +85,7 @@ class MiaPrivacyAttack(PrivacyAttack):
         for c in classes:
             tr = attack_dataset[attack_dataset['class_label'] == c]  # Select only records of that class
             tr.pop('class_label')  # Drop class attribute
-            tr_l = tr.pop('target_label')  # Use IN/OUT as labels
+            tr_l = np.array(tr.pop('target_label'))  # Use IN/OUT as labels
 
             attack_model = self._get_attack_model()
 
