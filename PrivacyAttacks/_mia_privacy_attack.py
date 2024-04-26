@@ -4,6 +4,7 @@ Implementation of the original MIA attack.
 
 import pickle
 from pathlib import Path
+from tqdm import tqdm
 
 import pandas as pd
 import numpy as np
@@ -26,6 +27,7 @@ class MiaPrivacyAttack(PrivacyAttack):
                  attack_model_type: str = 'rf',
                  attack_model_params: dict = None,
                  shadow_test_size: float = 0.5,
+                 undersample_shadow_dataset: bool = False,
                  undersample_attack_dataset: bool = True,
                  voting_model: bool = False):
         """
@@ -49,6 +51,9 @@ class MiaPrivacyAttack(PrivacyAttack):
             Parameters to be passed to the attack model.
         shadow_test_size : float, default=0.5
             test set size used during shadow model training.
+        undersample_attack_dataset : bool, default=False
+            Whether to balance the shadow dataset or not. If True, it will undersample the black box predictions on the
+            shadow set to have balanced classes.
         undersample_attack_dataset : bool, default=True
             Whether to balance the attack dataset or not. If True, it will undersample the majority class to obtain
             balanced IN/OUT classes.
@@ -61,6 +66,7 @@ class MiaPrivacyAttack(PrivacyAttack):
         self.name = name
         self.n_shadow_models = n_shadow_models
         self.shadow_test_size = shadow_test_size
+        self.undersample_shadow_dataset = undersample_shadow_dataset
         self.undersample_attack_dataset = undersample_attack_dataset
         self.voting_model = voting_model
         self.attack_models = None
@@ -113,7 +119,7 @@ class MiaPrivacyAttack(PrivacyAttack):
             # TODO implement voting attack model
             pass
         else:
-            for idx, row in enumerate(proba.values):
+            for idx, row in enumerate(tqdm(proba.values)):
                 # pred = self.attack_models[class_labels[idx]].predict(row.reshape(1, -1))
                 pred = self.attack_models[class_labels[idx]].predict(pd.DataFrame(row.reshape(1, -1)))
                 predictions.extend(pred)
@@ -129,6 +135,11 @@ class MiaPrivacyAttack(PrivacyAttack):
 
         # We audit the black box for the predictions on the shadow set
         labels_shadow = self.bb.predict(shadow_dataset)
+        if self.undersample_shadow_dataset:
+            undersampler = RandomUnderSampler(sampling_strategy='majority')
+            shadow_dataset.columns = shadow_dataset.columns.astype(str)
+            shadow_dataset, labels_shadow = undersampler.fit_resample(shadow_dataset, labels_shadow)
+            shadow_dataset = shadow_dataset.reset_index(drop=True)
 
         # Train the shadow models
         for i in range(1, self.n_shadow_models+1):
@@ -170,13 +181,11 @@ class MiaPrivacyAttack(PrivacyAttack):
         # Merge all sets and reset the index
         attack_dataset = pd.concat(attack_dataset)
         attack_dataset = attack_dataset.reset_index(drop=True)
-
         if self.undersample_attack_dataset:
             undersampler = RandomUnderSampler(sampling_strategy='majority')
-            y = attack_dataset['target_label']
             attack_dataset.columns = attack_dataset.columns.astype(str)
-            attack_dataset, y = undersampler.fit_resample(attack_dataset, y)
-            attack_dataset['target_label'] = y
+            attack_dataset, _ = undersampler.fit_resample(attack_dataset, attack_dataset['target_label'])
+            attack_dataset = attack_dataset.reset_index(drop=True)
         self.attack_dataset_save_path = f'{data_save_folder}/attack_dataset.csv'
         attack_dataset.to_csv(self.attack_dataset_save_path, index=False)
         return attack_dataset

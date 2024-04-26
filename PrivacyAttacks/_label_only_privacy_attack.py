@@ -25,6 +25,7 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
                  n_noise_samples_fit: int = 1000,
                  n_noise_samples_predict: int = None,
                  shadow_test_size: float = 0.5,
+                 undersample_shadow_dataset: bool = False,
                  undersample_attack_dataset: bool = True,
                  prob_bit_flip: float = 0.6):
         super().__init__(black_box, shadow_model_type, shadow_model_params)
@@ -37,6 +38,7 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
         self.attack_model = None
         self.name = 'label_only_attack'
         self.shadow_test_size = shadow_test_size
+        self.undersample_shadow_dataset = undersample_shadow_dataset
         self.undersample_attack_dataset = undersample_attack_dataset
         self.prob_bit_flip = prob_bit_flip
 
@@ -92,6 +94,11 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
 
         # We audit the black box for the predictions on the shadow set
         labels_shadow = self.bb.predict(shadow_dataset)
+        if self.undersample_shadow_dataset:
+            undersampler = RandomUnderSampler(sampling_strategy='majority')
+            shadow_dataset.columns = shadow_dataset.columns.astype(str)
+            shadow_dataset, labels_shadow = undersampler.fit_resample(shadow_dataset, labels_shadow)
+            shadow_dataset = shadow_dataset.reset_index(drop=True)
 
         # Train the shadow models
         for i in range(1, self.n_shadow_models+1):
@@ -133,10 +140,9 @@ class LabelOnlyPrivacyAttack(PrivacyAttack):
 
         if self.undersample_attack_dataset:
             undersampler = RandomUnderSampler(sampling_strategy='majority')
-            y = attack_dataset['target_label']
             attack_dataset.columns = attack_dataset.columns.astype(str)
-            attack_dataset, y = undersampler.fit_resample(attack_dataset, y)
-            attack_dataset['target_label'] = y
+            attack_dataset, _ = undersampler.fit_resample(attack_dataset, attack_dataset['target_label'])
+            attack_dataset = attack_dataset.reset_index(drop=True)
         self.attack_dataset_save_path = f'{data_save_folder}/attack_dataset.csv'
         attack_dataset.to_csv(self.attack_dataset_save_path, index=False)
         return attack_dataset
